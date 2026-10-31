@@ -50,111 +50,121 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{flex:1;border:0;border-radius:0;background:none;padding:16px;font-weight:600;color:var(--mute)}
 nav button.on{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}
+.st{font-size:13px;color:var(--mute);margin-top:4px}.st.on::before,.st.off::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--gold)}.st.off::before{background:var(--red)}
+.top{display:flex;gap:8px;margin:0 0 12px}.top button{flex:1;font-size:14px;padding:8px}
 </style>
 </head>
 <body>
-<header><h1>Pivný účet</h1><div class="sum">Spolu na účte<b id="all">0,00 €</b></div></header>
+<header><div><h1>Pivný účet</h1><div class="st" id="st"></div></div><div class="sum">Spolu na účte<b id="all">0,00 €</b></div></header>
 <main id="app"></main>
 <nav><button id="t1" class="on">Ľudia</button><button id="t2">Cenník</button></nav>
 <script>
 (function(){
-var KEY="pivny-ucet-v1";
-var def={people:[],items:[
-{id:"i1",name:"Pivo 0,5 l",price:2,type:"b"},
-{id:"i2",name:"Pivo 0,3 l",price:1.5,type:"b"},
-{id:"i3",name:"Vodka 4 cl",price:2,type:"l"},
-{id:"i4",name:"Rum 4 cl",price:2.5,type:"l"},
-{id:"i5",name:"Borovička 4 cl",price:2,type:"l"},
-{id:"i6",name:"Fernet 4 cl",price:2.5,type:"l"}]};
-var S=load(),tab=1,open=null,armed=null;
-function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.people&&d.items)return d}}catch(e){}return JSON.parse(JSON.stringify(def))}
-var cloud=null,tm=null;
-function save(){var j=JSON.stringify(S);try{localStorage.setItem(KEY,j)}catch(e){}
- if(cloud){clearTimeout(tm);tm=setTimeout(function(){try{cloud.set({json:j,t:Date.now()}).catch(function(){})}catch(e){}},400)}}
+var LS={g:function(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+var DB_URL="https://pivny-ucet-default-rtdb.europe-west1.firebasedatabase.app";
+var q=new URLSearchParams(location.search);
+var db=(q.get("db")||DB_URL||LS.g("db")).replace(/\/+$/,"");
+var room=clean(q.get("r")||LS.g("room"));
+if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room);try{history.replaceState(null,"",location.pathname)}catch(e){}}
+var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
+var D={items:{},people:{},orders:{}},last="",online=false,tab=1,open=null,armed=null,seeded=false,msg="";
+function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function eur(n){return n.toFixed(2).replace(".",",")+" €"}
-function total(p){return p.orders.reduce(function(a,o){return a+o.price},0)}
 function uid(){return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function find(id){return S.people.filter(function(p){return p.id===id})[0]}
+function byT(o){return Object.keys(o||{}).sort(function(a,b){return (o[a].t||0)-(o[b].t||0)})}
+function total(pid){var o=D.orders[pid]||{};return Object.keys(o).reduce(function(a,k){return a+o[k].price},0)}
+function api(method,path,body){return fetch(db+"/rooms/"+room+path+".json",{method:method,body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error("http");return r.json()})}
+function status(){var e=document.getElementById("st");if(!room||!db){e.className="st";e.textContent="";return}e.className="st "+(online?"on":"off");e.textContent="Miestnosť "+room+(online?": pripojené":": bez spojenia")}
+function loc(obj){Object.keys(obj).forEach(function(p){var a=p.split("/"),o=D;for(var i=0;i<a.length-1;i++){o=o[a[i]]=o[a[i]]||{}}var l=a[a.length-1];if(obj[p]===null)delete o[l];else o[l]=obj[p]})}
+function W(obj){loc(obj);last="";render();return api("PATCH","",obj).then(poll).catch(function(){online=false;status()})}
+function busy(){var a=document.activeElement;return a&&(a.tagName==="INPUT")}
+function poll(){
+ if(!db||!room)return Promise.resolve();
+ return api("GET","").then(function(d){
+  online=true;d=d||{};
+  var n={items:d.items||{},people:d.people||{},orders:d.orders||{}},j=JSON.stringify(n);
+  if(!Object.keys(n.items).length&&!seeded){seeded=true;W({items:DEF});return}
+  if(j!==last){last=j;D=n;if(!busy())render()}
+  status();
+ }).catch(function(){online=false;status()});
+}
 function render(){
- var all=S.people.reduce(function(a,p){return a+total(p)},0);
+ var all=Object.keys(D.people).reduce(function(a,id){return a+total(id)},0);
  document.getElementById("all").textContent=eur(all);
  document.getElementById("t1").className=tab===1?"on":"";
  document.getElementById("t2").className=tab===2?"on":"";
+ status();
  var h="";
+ if(!db||!room){
+  h+='<div class="hd">Pripojenie k spoločnému účtu</div><div class="log">Zadaj adresu databázy a kód miestnosti. Všetci, ktorí zadajú rovnaký kód, uvidia ten istý účet.</div>';
+  h+='<div class="pr"><input id="dbi" placeholder="https://…firebasedatabase.app" value="'+esc(db)+'" autocapitalize="off" autocomplete="off"></div><div class="pr"><input id="roi" placeholder="Kód miestnosti, napr. piatok" value="'+esc(room)+'" autocapitalize="off" autocomplete="off"></div><div class="row"><button class="pri" data-a="conn">Pripojiť</button></div>';
+  if(msg)h+='<div class="log danger">'+esc(msg)+'</div>';
+  document.getElementById("app").innerHTML=h;return;
+ }
  if(tab===1){
+  h+='<div class="top"><button data-a="share">'+(msg==="copied"?"Odkaz skopírovaný":"Zdieľať odkaz")+'</button><button data-a="leave">Zmeniť miestnosť</button></div>';
   h+='<div class="add"><input id="np" placeholder="Meno nového človeka" maxlength="40" autocomplete="off"><button class="pri" data-a="addp">Pridať</button></div>';
-  if(!S.people.length)h+='<div class="empty">Zatiaľ nikto. Pridaj prvé meno a potom mu ťukaj nápoje.</div>';
-  S.people.forEach(function(p){
-   var t=total(p),o=open===p.id;
-   h+='<div class="p"><button class="ph" data-a="tog" data-id="'+p.id+'" aria-expanded="'+o+'"><span class="nm">'+esc(p.name)+'</span><span class="tot'+(t?'':' z')+'">'+eur(t)+'</span></button>';
+  var ids=byT(D.people);
+  if(!ids.length)h+='<div class="empty">Zatiaľ nikto. Pridaj prvé meno a potom mu ťukaj nápoje.</div>';
+  ids.forEach(function(id){
+   var p=D.people[id],t=total(id),o=open===id,ord=D.orders[id]||{},ok=byT(ord);
+   h+='<div class="p"><button class="ph" data-a="tog" data-id="'+id+'" aria-expanded="'+o+'"><span class="nm">'+esc(p.name)+'</span><span class="tot'+(t?'':' z')+'">'+eur(t)+'</span></button>';
    if(o){
     h+='<div class="pb"><div class="grid">';
-    S.items.forEach(function(i){h+='<button data-a="buy" data-id="'+p.id+'" data-i="'+i.id+'" class="'+(i.type==="l"?"l":"")+'">'+esc(i.name)+'<small>'+eur(i.price)+'</small></button>'});
+    byT(D.items).concat(Object.keys(D.items).filter(function(k){return !D.items[k].t})).filter(function(v,i,a){return a.indexOf(v)===i}).forEach(function(i){var it=D.items[i];h+='<button data-a="buy" data-id="'+id+'" data-i="'+i+'" class="'+(it.type==="l"?"l":"")+'">'+esc(it.name)+'<small>'+eur(it.price)+'</small></button>'});
     h+='</div>';
-    var cnt={};p.orders.forEach(function(x){cnt[x.name]=(cnt[x.name]||0)+1});
-    var k=Object.keys(cnt);
-    if(k.length){h+='<div class="log">';k.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
-    h+='<div class="row"><button data-a="undo" data-id="'+p.id+'"'+(p.orders.length?'':' disabled')+'>Zrušiť posledné</button>';
-    h+='<button data-a="paid" data-id="'+p.id+'"'+(p.orders.length?'':' disabled')+'>'+(armed==="paid"+p.id?"Naozaj vynulovať?":"Zaplatil")+'</button>';
-    h+='<button class="danger" data-a="delp" data-id="'+p.id+'">'+(armed==="del"+p.id?"Naozaj?":"Zmazať")+'</button></div></div>';
+    var cnt={};ok.forEach(function(k){var n=ord[k].name;cnt[n]=(cnt[n]||0)+1});
+    var kk=Object.keys(cnt);
+    if(kk.length){h+='<div class="log">';kk.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
+    h+='<div class="row"><button data-a="undo" data-id="'+id+'"'+(ok.length?'':' disabled')+'>Zrušiť posledné</button>';
+    h+='<button data-a="paid" data-id="'+id+'"'+(ok.length?'':' disabled')+'>'+(armed==="paid"+id?"Naozaj vynulovať?":"Zaplatil")+'</button>';
+    h+='<button class="danger" data-a="delp" data-id="'+id+'">'+(armed==="del"+id?"Naozaj?":"Zmazať")+'</button></div></div>';
    }
    h+='</div>';
   });
-  if(S.people.length){
-   h+='<div class="hd">Odpočítať rovným dielom</div><div class="add"><input id="sp" inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+S.people.length+' ľudí a odpočíta každému.</div>';
-  }
+  if(ids.length)h+='<div class="hd">Odpočítať rovným dielom</div><div class="add"><input id="sp" inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>';
  }else{
   h+='<div class="hd">Cenník</div>';
-  S.items.forEach(function(i){
-   h+='<div class="pr"><input class="n" data-f="name" data-i="'+i.id+'" value="'+esc(i.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i.id+'" value="'+String(i.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i.id+'" aria-label="Zmazať položku">✕</button></div>';
-  });
+  Object.keys(D.items).forEach(function(i){var it=D.items[i];
+   h+='<div class="pr"><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku">✕</button></div>'});
   h+='<div class="row"><button data-a="addi" data-t="b">+ Pivo</button><button data-a="addi" data-t="l">+ Tvrdé</button></div>';
  }
- var keep=document.activeElement&&document.activeElement.id==="np";
  document.getElementById("app").innerHTML=h;
- if(keep){var n=document.getElementById("np");if(n)n.focus()}
 }
 document.getElementById("t1").onclick=function(){tab=1;armed=null;render()};
 document.getElementById("t2").onclick=function(){tab=2;armed=null;render()};
 document.addEventListener("click",function(e){
  var b=e.target.closest("[data-a]");if(!b)return;
- var a=b.dataset.a,id=b.dataset.id,p=id?find(id):null;
- if(a==="addp"){var inp=document.getElementById("np"),v=inp.value.trim();if(!v)return;var q={id:uid(),name:v,orders:[]};S.people.push(q);open=q.id;armed=null}
- else if(a==="split"){var sv=parseFloat(document.getElementById("sp").value.replace(",","."));if(isNaN(sv)||sv<=0||!S.people.length)return;var sh=Math.round(sv/S.people.length*100)/100;S.people.forEach(function(x){x.orders.push({name:"Odpočet "+eur(sh),price:-sh,t:Date.now()})});armed=null}
- else if(a==="tog"){open=open===id?null:id;armed=null}
- else if(a==="buy"){var it=S.items.filter(function(x){return x.id===b.dataset.i})[0];if(p&&it)p.orders.push({name:it.name,price:it.price,t:Date.now()});armed=null}
- else if(a==="undo"){if(p)p.orders.pop();armed=null}
- else if(a==="paid"){if(armed==="paid"+id){p.orders=[];armed=null}else armed="paid"+id}
- else if(a==="delp"){if(armed==="del"+id){S.people=S.people.filter(function(x){return x.id!==id});open=null;armed=null}else armed="del"+id}
- else if(a==="addi"){S.items.push({id:uid(),name:b.dataset.t==="l"?"Nové tvrdé 4 cl":"Nové pivo",price:2,type:b.dataset.t})}
- else if(a==="deli"){S.items=S.items.filter(function(x){return x.id!==b.dataset.i})}
- save();render();
+ var a=b.dataset.a,id=b.dataset.id,now=Date.now();
+ if(a==="conn"){var u=document.getElementById("dbi").value.trim().replace(/\/+$/,""),r=clean(document.getElementById("roi").value);
+  if(u.indexOf("https://")!==0||!r){msg="Zadaj adresu databázy (začína https://) a kód miestnosti.";render();return}
+  db=u;room=r;msg="";LS.s("db",db);LS.s("room",room);D={items:{},people:{},orders:{}};last="";seeded=false;render();poll();return}
+ if(a==="leave"){LS.s("room","");room="";D={items:{},people:{},orders:{}};render();return}
+ if(a==="share"){var link=location.origin+location.pathname+"?db="+encodeURIComponent(db)+"&r="+room;
+  if(navigator.share){navigator.share({title:"Pivný účet",url:link}).catch(function(){})}
+  else{try{navigator.clipboard.writeText(link);msg="copied";render();setTimeout(function(){msg="";render()},2000)}catch(x){}}return}
+ var o={};
+ if(a==="addp"){var v=document.getElementById("np").value.trim();if(!v)return;var nid=uid();o["people/"+nid]={name:v,t:now};open=nid;armed=null}
+ else if(a==="tog"){open=open===id?null:id;armed=null;render();return}
+ else if(a==="buy"){var it=D.items[b.dataset.i];if(!it)return;o["orders/"+id+"/"+uid()]={name:it.name,price:it.price,t:now};armed=null}
+ else if(a==="undo"){var ord=D.orders[id]||{},ks=byT(ord);if(!ks.length)return;o["orders/"+id+"/"+ks[ks.length-1]]=null;armed=null}
+ else if(a==="paid"){if(armed==="paid"+id){o["orders/"+id]=null;armed=null}else{armed="paid"+id;render();return}}
+ else if(a==="delp"){if(armed==="del"+id){o["people/"+id]=null;o["orders/"+id]=null;open=null;armed=null}else{armed="del"+id;render();return}}
+ else if(a==="split"){var sv=parseFloat(document.getElementById("sp").value.replace(",","."));var pk=Object.keys(D.people);if(isNaN(sv)||sv<=0||!pk.length)return;var sh=Math.round(sv/pk.length*100)/100;pk.forEach(function(k){o["orders/"+k+"/"+uid()]={name:"Odpočet "+eur(sh),price:-sh,t:now}});armed=null}
+ else if(a==="addi"){o["items/"+uid()]={name:b.dataset.t==="l"?"Nové tvrdé 4 cl":"Nové pivo",price:2,type:b.dataset.t,t:now}}
+ else if(a==="deli"){o["items/"+b.dataset.i]=null}
+ else return;
+ W(o);
 });
 document.addEventListener("change",function(e){
- var f=e.target.dataset.f;if(!f)return;
- var it=S.items.filter(function(x){return x.id===e.target.dataset.i})[0];if(!it)return;
- if(f==="name"){it.name=e.target.value.trim()||it.name}
- else{var v=parseFloat(e.target.value.replace(",","."));if(!isNaN(v)&&v>=0)it.price=v}
- save();render();
+ var f=e.target.dataset.f,i=e.target.dataset.i;if(!f||!D.items[i])return;var o={};
+ if(f==="name"){var n=e.target.value.trim();if(!n)return;o["items/"+i+"/name"]=n}
+ else{var v=parseFloat(e.target.value.replace(",","."));if(isNaN(v)||v<0)return;o["items/"+i+"/price"]=v}
+ W(o);
 });
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="sp")){var b=document.querySelector(e.target.id==="np"?'[data-a="addp"]':'[data-a="split"]');if(b)b.click()}});
-render();
-(async function(){
- try{
-  if(!window.claude||!window.claude.use)return;
-  var db=await window.claude.use("db"),u=await window.claude.use("user");
-  if(!db||!u)return;
-  var id=await u.id();if(!id)return;
-  var ref=db.doc("data/users/"+id+"/state");
-  var snap=await ref.get();
-  if(snap.exists){
-   var d=snap.data();
-   if(d&&d.json){var c=JSON.parse(d.json);if(c&&c.people&&c.items){S=c;try{localStorage.setItem(KEY,d.json)}catch(e){}render()}}
-  }else{await ref.set({json:JSON.stringify(S),t:Date.now()})}
-  cloud=ref;
- }catch(e){}
-})();
+render();poll();setInterval(poll,3000);
 })();
 </script>
 </body>
