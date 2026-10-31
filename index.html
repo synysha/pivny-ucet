@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pivný účet</title>
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1d2a25">
+<meta name="theme-color" content="#e9e2db">
 <meta name="apple-mobile-web-app-title" content="Pivný účet">
 
 <style>
@@ -65,7 +65,7 @@ var DB_URL="https://pivny-ucet-default-rtdb.europe-west1.firebasedatabase.app";
 var q=new URLSearchParams(location.search);
 var db=(q.get("db")||DB_URL||LS.g("db")).replace(/\/+$/,"");
 var room=clean(q.get("r")||LS.g("room"));
-if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room);try{history.replaceState(null,"",location.pathname)}catch(e){}}
+if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var D={items:{},people:{},orders:{}},last="",online=false,tab=1,open=null,armed=null,seeded=false,msg="";
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
