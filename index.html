@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pivný účet</title>
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="manifest" href="manifest.webmanifest">
+<title>TourDeBeer</title>
+<link rel="icon" href="icon-192-v2.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-180-v2.png">
+<link rel="manifest" href="manifest.webmanifest?v=2">
 <meta name="theme-color" content="#e9e2db">
-<meta name="apple-mobile-web-app-title" content="Pivný účet">
+<meta name="apple-mobile-web-app-title" content="TourDeBeer">
 
 <style>
 :root{--bg:#eef1ec;--card:#fff;--ink:#1d2a25;--mute:#5d6d66;--line:#d3dad4;--gold:#9a6200;--goldbg:#f6e2b3;--red:#a8321f;
@@ -52,12 +52,21 @@ nav button{flex:1;border:0;border-radius:0;background:none;padding:16px;font-wei
 nav button.on{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}
 .st{font-size:13px;color:var(--mute);margin-top:4px}.st.on::before,.st.off::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--gold)}.st.off::before{background:var(--red)}
 .top{display:flex;gap:8px;margin:0 0 12px}.top button{flex:1;font-size:14px;padding:8px}
+.gh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px 4px}.gh button{padding:6px 10px;font-size:13px}
+.rt{display:flex;align-items:center;gap:6px;padding:0 14px}.p .rt:last-child{padding-bottom:10px}
+.rl{width:68px;font-size:14px;color:var(--mute)}.stars button{border:0;background:none;padding:6px 3px;font-size:26px;line-height:1;color:var(--line);border-radius:6px}.stars button.on{color:var(--gold)}
+.rv{margin-left:auto;font-size:13px;color:var(--mute);text-align:right}
+nav button{padding:16px 4px;font-size:15px}
+.rt{flex-wrap:wrap}.rl{width:auto;flex:1;font-weight:600;color:var(--ink)}.rv{margin-left:0}
+.nums{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;margin:4px 0 8px}
+.nums button{padding:9px 0;font-size:16px;text-align:center;min-width:0}
+.nums button.on{background:var(--gold);border-color:var(--gold);color:var(--bg);font-weight:700}
 </style>
 </head>
 <body>
-<header><div><h1>Pivný účet</h1><div class="st" id="st"></div></div><div class="sum">Spolu na účte<b id="all">0,00 €</b></div></header>
+<header><div><h1>TourDeBeer</h1><div class="st" id="st"></div></div><div class="sum">Spolu na účte<b id="all">0,00 €</b></div></header>
 <main id="app"></main>
-<nav><button id="t1" class="on">Ľudia</button><button id="t2">Cenník</button></nav>
+<nav><button id="t1" class="on">Účet</button><button id="t2">Krčmy</button><button id="t3">Piva</button><button id="t4">Cenník</button></nav>
 <script>
 (function(){
 var LS={g:function(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -67,7 +76,8 @@ var db=(q.get("db")||DB_URL||LS.g("db")).replace(/\/+$/,"");
 var room=clean(q.get("r")||LS.g("room"));
 if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
-var D={items:{},people:{},orders:{}},last="",online=false,tab=1,open=null,armed=null,seeded=false,msg="";
+var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
+var D={items:{},people:{},orders:{},pubs:{},beers:{},ratings:{}},last="",online=false,tab=1,open=null,armed=null,seeded=false,msg="";
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function eur(n){return n.toFixed(2).replace(".",",")+" €"}
@@ -83,17 +93,29 @@ function poll(){
  if(!db||!room)return Promise.resolve();
  return api("GET","").then(function(d){
   online=true;d=d||{};
-  var n={items:d.items||{},people:d.people||{},orders:d.orders||{}},j=JSON.stringify(n);
+  var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},beers:d.beers||{},ratings:d.ratings||{}},j=JSON.stringify(n);
   if(!Object.keys(n.items).length&&!seeded){seeded=true;W({items:DEF});return}
   if(j!==last){last=j;D=n;if(!busy())render()}
   status();
  }).catch(function(){online=false;status()});
 }
+function rinfo(k,id){var r=(D.ratings[k]||{})[id]||{},v=Object.keys(r).map(function(x){return r[x]}).filter(function(x){return x>=1&&x<=5});return{n:v.length,a:v.length?v.reduce(function(a,b){return a+b},0)/v.length:0,own:(r[DEV]>=1&&r[DEV]<=5)?r[DEV]:-1}}
+function starRow(k,id,label){var s=rinfo(k,id),h='<div class="rt"><span class="rl">'+label+'</span><span class="rv">'+(s.n?'Ø '+s.a.toFixed(1).replace(".",",")+' ('+s.n+')':'zatiaľ nič')+'</span><div class="nums">';for(var i=1;i<=5;i++)h+='<button data-a="rate" data-k="'+k+'" data-id="'+id+'" data-v="'+i+'" class="'+(i===s.own?'on':'')+'" aria-label="Známka '+i+' z 5">'+i+'</button>';return h+'</div></div>'}
+function groupView(){
+ var pub=tab===2,coll=pub?"pubs":"beers",kinds=pub?[["krcma","Krčma"],["obsluha","Obsluha"]]:[["pivo","Pivo"]],ids=byT(D[coll]);
+ var h='<div class="add"><input id="ng" placeholder="'+(pub?"Názov krčmy":"Názov piva")+'" maxlength="40" autocomplete="off"><button class="pri" data-a="addg" data-g="'+coll+'">Pridať</button></div><div class="log">Známky ako v škole: 1 je najlepšie, 5 najhoršie.</div>';
+ if(!ids.length)h+='<div class="empty">'+(pub?"Zatiaľ žiadna krčma. Pridaj prvú a ohodnoť krčmu aj obsluhu.":"Zatiaľ žiadne pivo. Pridaj prvé a ohodnoť ho.")+'</div>';
+ ids.forEach(function(id){
+  h+='<div class="p"><div class="gh"><span class="nm">'+esc(D[coll][id].name)+'</span><button class="danger" data-a="delg" data-g="'+coll+'" data-id="'+id+'">'+(armed==="dg"+id?"Naozaj?":"Zmazať")+'</button></div>';
+  kinds.forEach(function(k){h+=starRow(k[0],id,k[1])});
+  h+='</div>';
+ });
+ return h;
+}
 function render(){
  var all=Object.keys(D.people).reduce(function(a,id){return a+total(id)},0);
  document.getElementById("all").textContent=eur(all);
- document.getElementById("t1").className=tab===1?"on":"";
- document.getElementById("t2").className=tab===2?"on":"";
+ for(var ti=1;ti<=4;ti++)document.getElementById("t"+ti).className=tab===ti?"on":"";
  status();
  var h="";
  if(!db||!room){
@@ -124,7 +146,7 @@ function render(){
    h+='</div>';
   });
   if(ids.length)h+='<div class="hd">Odpočítať rovným dielom</div><div class="add"><input id="sp" inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>';
- }else{
+ }else if(tab===2||tab===3){h+=groupView()}else{
   h+='<div class="hd">Cenník</div>';
   Object.keys(D.items).forEach(function(i){var it=D.items[i];
    h+='<div class="pr"><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku">✕</button></div>'});
@@ -132,17 +154,16 @@ function render(){
  }
  document.getElementById("app").innerHTML=h;
 }
-document.getElementById("t1").onclick=function(){tab=1;armed=null;render()};
-document.getElementById("t2").onclick=function(){tab=2;armed=null;render()};
+[1,2,3,4].forEach(function(n){document.getElementById("t"+n).onclick=function(){tab=n;armed=null;render()}});
 document.addEventListener("click",function(e){
  var b=e.target.closest("[data-a]");if(!b)return;
  var a=b.dataset.a,id=b.dataset.id,now=Date.now();
  if(a==="conn"){var u=document.getElementById("dbi").value.trim().replace(/\/+$/,""),r=clean(document.getElementById("roi").value);
   if(u.indexOf("https://")!==0||!r){msg="Zadaj adresu databázy (začína https://) a kód miestnosti.";render();return}
-  db=u;room=r;msg="";LS.s("db",db);LS.s("room",room);D={items:{},people:{},orders:{}};last="";seeded=false;render();poll();return}
- if(a==="leave"){LS.s("room","");room="";D={items:{},people:{},orders:{}};render();return}
+  db=u;room=r;msg="";LS.s("db",db);LS.s("room",room);D={items:{},people:{},orders:{},pubs:{},beers:{},ratings:{}};last="";seeded=false;render();poll();return}
+ if(a==="leave"){LS.s("room","");room="";D={items:{},people:{},orders:{},pubs:{},beers:{},ratings:{}};render();return}
  if(a==="share"){var link=location.origin+location.pathname+"?db="+encodeURIComponent(db)+"&r="+room;
-  if(navigator.share){navigator.share({title:"Pivný účet",url:link}).catch(function(){})}
+  if(navigator.share){navigator.share({title:"TourDeBeer",url:link}).catch(function(){})}
   else{try{navigator.clipboard.writeText(link);msg="copied";render();setTimeout(function(){msg="";render()},2000)}catch(x){}}return}
  var o={};
  if(a==="addp"){var v=document.getElementById("np").value.trim();if(!v)return;var nid=uid();o["people/"+nid]={name:v,t:now};open=nid;armed=null}
@@ -152,6 +173,9 @@ document.addEventListener("click",function(e){
  else if(a==="paid"){if(armed==="paid"+id){o["orders/"+id]=null;armed=null}else{armed="paid"+id;render();return}}
  else if(a==="delp"){if(armed==="del"+id){o["people/"+id]=null;o["orders/"+id]=null;open=null;armed=null}else{armed="del"+id;render();return}}
  else if(a==="split"){var sv=parseFloat(document.getElementById("sp").value.replace(",","."));var pk=Object.keys(D.people);if(isNaN(sv)||sv<=0||!pk.length)return;var sh=Math.round(sv/pk.length*100)/100;pk.forEach(function(k){o["orders/"+k+"/"+uid()]={name:"Odpočet "+eur(sh),price:-sh,t:now}});armed=null}
+ else if(a==="addg"){var gv=document.getElementById("ng").value.trim();if(!gv)return;o[b.dataset.g+"/"+uid()]={name:gv,t:now}}
+ else if(a==="delg"){if(armed==="dg"+id){var gc=b.dataset.g;o[gc+"/"+id]=null;(gc==="pubs"?["krcma","obsluha"]:["pivo"]).forEach(function(k){o["ratings/"+k+"/"+id]=null});armed=null}else{armed="dg"+id;render();return}}
+ else if(a==="rate"){var rk=b.dataset.k,rv=parseInt(b.dataset.v,10),own=rinfo(rk,id).own;o["ratings/"+rk+"/"+id+"/"+DEV]=own===rv?null:rv}
  else if(a==="addi"){o["items/"+uid()]={name:b.dataset.t==="l"?"Nové tvrdé 4 cl":"Nové pivo",price:2,type:b.dataset.t,t:now}}
  else if(a==="deli"){o["items/"+b.dataset.i]=null}
  else return;
@@ -163,7 +187,7 @@ document.addEventListener("change",function(e){
  else{var v=parseFloat(e.target.value.replace(",","."));if(isNaN(v)||v<0)return;o["items/"+i+"/price"]=v}
  W(o);
 });
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="sp")){var b=document.querySelector(e.target.id==="np"?'[data-a="addp"]':'[data-a="split"]');if(b)b.click()}});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="sp"||e.target.id==="ng")){var b=document.querySelector(e.target.id==="np"?'[data-a="addp"]':e.target.id==="ng"?'[data-a="addg"]':'[data-a="split"]');if(b)b.click()}});
 render();poll();setInterval(poll,3000);
 })();
 </script>
