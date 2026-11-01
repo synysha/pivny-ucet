@@ -87,7 +87,7 @@ if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
 function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{}}}
-var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,open=null,armed=null,seeded=false,msg="";
+var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,open=null,armed=null,seeded=false,msg="";
 var app=document.getElementById("app");
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -107,6 +107,7 @@ function poll(){
   var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},mem:d.mem||{},ed:d.ed||{},rt:d.rt||{},meta:d.meta||{}},j=JSON.stringify(n);
   if(!Object.keys(n.items).length&&!seeded){seeded=true;W({items:DEF});return}
   if(!n.meta.seed1&&!seeded2){seeded2=true;W(seedObj(n.pubs));return}
+  if(n.meta.seed1&&!n.meta.hist1&&!seeded3&&Object.keys(n.pubs).length){seeded3=true;W(histObj(n));return}
   if(j!==last){last=j;D=n;if(!busy())render()}
   status();
  }).catch(function(){online=false;status()});
@@ -138,10 +139,21 @@ function accView(){
  if(ids.length)h+='<h2>Odpočítať rovným dielom</h2><div class="add"><input id="sp" data-enter inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>';
  return h;
 }
-function norm(s){return String(s||"").toLowerCase().replace(/\s+/g," ").trim()}
+function norm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
 function seedObj(pubs){var o={},have={};Object.keys(pubs||{}).forEach(function(k){have[norm(pubs[k].name)]=1});
  SEED.forEach(function(r,i){if(have[norm(r[0])])return;var bs={};r[2].forEach(function(n,j){bs["b"+(j+1)]={name:n,t:j}});o["pubs/s"+(i<9?"0":"")+(i+1)]={name:r[0],area:r[1],t:1000+i,beers:bs}});
  o["meta/seed1"]=true;return o}
+var HIST=[{year:"2026",n:12,date:"27. 6. 2026",ms:["Roman","Roman Ž.","Maroť","Macky","Backy","Rado"],rows:[["Prievidzká piváreň","Radegast tank",[[3,2,2],[2,4,4],[2,3,2],[3,2,3],[2,2,3],[3,2,4]]],["Piano","Šariš Unikát 11",[[1,2,3],[2,3,2],[1,3,3],[1,3,3],[1,3,2],[2,2,3]]],["U Lacku","Plzeň 12",[[3,5,5],[3,5,4],[4,4,4],[3,4,4],[2,4,1],[2,3,3]]],["Tehelna","Saris unikát 11",[[3,1,2],[3,2,2],[2,2,2],[2,2,2],[3,2,2],[2,2,2]]],["Killer pub","Holba 11",[[4,5,4],[4,3,3],[4,4,3],[4,3,3],[4,4,2],[3,3,2]]],["Paputchka","Budvar IPA",[[5,2,1],[2,3,2],[3,3,2],[3,2,2],[3,2,2],[2,2,1]]],["Central pub","Bradáč 12",[[1,1,1],[2,2,2],[2,2,2],[2,2,2],[2,2,1],[2,2,2]]],["Pod Orechom","Starigáň 10",[[4,1,4],[3,2,3],[4,1,2],[3,2,3],[2,1,2],[3,1,3]]],["Septima","Svijany",[[2,2,1],[2,3,2],[2,2,2],[2,3,2],[2,3,1],[3,3,2]]],["Camelot","Galgenberg 12",[[2,3,3],[1,3,3],[2,3,2],[1,3,3],[1,3,3],[2,2,2]]],["Panský pivovar","Orol",[[1,2,2],[2,2,3],[2,2,2],[2,2,3],[1,2,1],[1,1,3]]],["Slávia","Budějovický 10",[[3,2,2],[2,2,3],[2,2,2],[2,2,3],[2,2,1],[1,2,2]]]]}];
+function histObj(n){var o={},pm={},mm={};
+ Object.keys(n.pubs).forEach(function(k){pm[norm(n.pubs[k].name)]=k});
+ Object.keys(n.mem).forEach(function(k){mm[norm(n.mem[k].name)]=k});
+ HIST.forEach(function(H){var e="h"+H.year,ids=H.ms.map(function(m,j){var k=mm[norm(m)];if(!k){k="hm"+j;o["mem/"+k]={name:m,t:500+j};mm[norm(m)]=k}return k});
+  var ed={year:H.year,n:H.n,date:H.date,t:1,pubs:{}},rt={};
+  H.rows.forEach(function(r,i){var pid=pm[norm(r[0])];if(!pid)return;ed.pubs[pid]={t:i+1,beer:r[1]};
+   var tp=n.pubs[pid].beers||{};if(!Object.keys(tp).some(function(b){return norm(tp[b].name)===norm(r[1])}))o["pubs/"+pid+"/beers/h"+H.year]={name:r[1],t:99};
+   var q=rt[pid]={krcma:{},pivo:{},obsluha:{}};r[2].forEach(function(g,j){q.pivo[ids[j]]=6-g[0];q.krcma[ids[j]]=6-g[1];q.obsluha[ids[j]]=6-g[2]})});
+  o["ed/"+e]=ed;o["rt/"+e]=rt});
+ o["meta/hist1"]=true;return o}
 function vals(r){return Object.keys(r||{}).filter(function(m){return D.mem[m]&&r[m]>=1&&r[m]<=5}).map(function(m){return r[m]})}
 function avgs(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:0}
 function f1(n){return n.toFixed(1).replace(".",",")}
@@ -179,13 +191,13 @@ function statView(){
   Object.keys(R).forEach(function(pid){var pb=D.pubs[pid];if(!pb)return;var bn=(((E.pubs||{})[pid]||{}).beer||"").trim();
    KIND.forEach(function(k){var v=vals((R[pid]||{})[k[0]]);if(!v.length)return;
     var p=P[pid]=P[pid]||{name:pb.name,k:{}},c=p.k[k[0]]=p.k[k[0]]||[];v.forEach(function(x){c.push(x)});
-    if(k[0]==="pivo"&&bn){var bk=norm(bn),b=B[bk]=B[bk]||{name:bn,v:[]};v.forEach(function(x){b.v.push(x)})}})})});
+    if(k[0]==="pivo"&&bn){var bk=norm(bn)+"|"+pid,b=B[bk]=B[bk]||{name:bn,pub:pb.name,v:[]};v.forEach(function(x){b.v.push(x)})}})})});
  function box(t,arr,fmt){var s='<h2>'+t+'</h2><div class="card">';if(!arr.length)return s+'<div class="log">Zatiaľ bez hodnotení.</div></div>';arr.slice(0,10).forEach(function(x,i){s+='<div class="li"><span>'+(i+1)+'. '+esc(x.name)+'<small class="ar">'+fmt(x)+'</small></span><b>'+f1(x.a)+' ★</b></div>'});return s+'</div>'}
  var pl=Object.keys(P).map(function(id){var p=P[id];return{name:p.name,p:p,a:avgs(Object.keys(p.k).map(function(k){return avgs(p.k[k])}))}}).sort(function(a,b){return b.a-a.a});
- var bl=Object.keys(B).map(function(k){return{name:B[k].name,a:avgs(B[k].v),n:B[k].v.length}}).sort(function(a,b){return b.a-a.a});
+ var bl=Object.keys(B).map(function(k){return{name:B[k].name,pub:B[k].pub,a:avgs(B[k].v),n:B[k].v.length}}).sort(function(a,b){return b.a-a.a});
  var ol=Object.keys(P).filter(function(id){return P[id].k.obsluha}).map(function(id){var v=P[id].k.obsluha;return{name:P[id].name,a:avgs(v),n:v.length}}).sort(function(a,b){return b.a-a.a});
  h+=box("Poradie krčiem",pl,function(x){return KIND.map(function(k){return k[1]+" "+(x.p.k[k[0]]?f1(avgs(x.p.k[k[0]])):"–")}).join(" · ")});
- h+=box("Poradie pív",bl,function(x){return x.n+" hodnotení"});
+ h+=box("Poradie pív",bl,function(x){return esc(x.pub)+" · "+x.n+" hodnotení"});
  h+=box("Najlepšia obsluha",ol,function(x){return x.n+" hodnotení"});
  var mk=Object.keys(M).sort(function(a,b){return M[b]-M[a]});
  h+='<h2>Miss krčmy</h2><div class="card">'+(mk.length?mk.slice(0,10).map(function(id,i){return '<div class="li"><span>'+(i+1)+'. '+esc(D.pubs[id].name)+'</span><b>'+M[id]+'×</b></div>'}).join(""):'<div class="log">Zatiaľ žiadne hlasy.</div>')+'</div>';
@@ -199,6 +211,7 @@ function tdbView(){
  if(newEd)h+='<div class="card"><div class="ct">Nový ročník</div><div class="pr"><input id="ney" inputmode="numeric" placeholder="Rok" value="'+new Date().getFullYear()+'"><input id="nen" inputmode="numeric" placeholder="Počet krčiem" value="12"></div><div class="row"><button class="pri" data-a="mked">Vytvoriť</button><button data-a="newed">Zrušiť</button></div></div>';
  if(!e)return h+'<div class="card empty">Zatiaľ žiadny ročník. Vytvor ho tlačidlom + Ročník. Minulé ročníky môžeš doplniť spätne.</div>';
  var E=D.ed[e],w=who(),picked=byT(E.pubs||{}),n=E.n||12;
+ if(E.date)h+='<div class="log">Dátum: '+esc(E.date)+'</div>';
  if(!D.mem[DEV])h+=nameCard();
  var ms=Object.keys(D.mem).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
  if(ms.length)h+='<div class="card"><div class="pr"><span class="rl">Hodnotí</span><select data-sel="as">'+(D.mem[w]?'':'<option value="" selected>vyber</option>')+ms.map(function(m){return '<option value="'+m+'"'+(m===w?" selected":"")+'>'+esc(D.mem[m].name)+(m===DEV?" (ja)":"")+'</option>'}).join("")+'</select></div></div>';
@@ -219,7 +232,7 @@ function profView(){
  var me=D.mem[DEV],ms=Object.keys(D.mem).sort(function(a,b){return (D.mem[a].t||0)-(D.mem[b].t||0)});
  var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename">Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div></div>';
  h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>';
- ms.forEach(function(m){h+='<div class="li"><span>'+esc(D.mem[m].name)+(m===DEV?' (ja)':'')+'</span>'+(m===DEV?'':'<button class="danger sm" data-a="delmem" data-id="'+m+'">'+(armed==="dm"+m?"Naozaj?":"Zmazať")+'</button>')+'</div>'});
+ ms.forEach(function(m){h+='<div class="li" style="flex-wrap:wrap"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno" style="flex:1 1 100%">'+(m===DEV?'<span class="log" style="margin:0">Toto som ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'">To som ja</button><button class="danger sm" data-a="delmem" data-id="'+m+'">'+(armed==="dm"+m?"Naozaj?":"Zmazať")+'</button>')+'</div>'});
  return h+'<div class="add" style="margin-top:10px"><input id="mn2" data-enter placeholder="Pridať účastníka bez apky" maxlength="30"><button class="pri" data-a="addmem">Pridať</button></div></div>';
 }
 function pubsView(){
@@ -287,7 +300,8 @@ document.addEventListener("click",function(e){
  else if(a==="pick"){var pv=document.getElementById("psel").value;if(!pv)return;var pbs=D.pubs[pv]&&D.pubs[pv].beers?Object.keys(D.pubs[pv].beers):[];o["ed/"+b.dataset.e+"/pubs/"+pv]={t:now,beer:pbs.length===1?D.pubs[pv].beers[pbs[0]].name:""}}
  else if(a==="unpick"){var ue=b.dataset.e;if(armed==="up"+id){o["ed/"+ue+"/pubs/"+id]=null;o["rt/"+ue+"/"+id]=null;armed=null}else{armed="up"+id;render();return}}
  else if(a==="rate"){var w=who();if(!D.mem[w]){msg="name";render();return}var rv=parseInt(b.dataset.v,10),rr=((D.rt[b.dataset.e]||{})[id]||{})[b.dataset.k]||{};o["rt/"+b.dataset.e+"/"+id+"/"+b.dataset.k+"/"+w]=rr[w]===rv?null:rv}
- else if(a==="savename"){var nm=document.getElementById("mn").value.trim();if(!nm)return;o["mem/"+DEV+"/name"]=nm;if(!D.mem[DEV])o["mem/"+DEV+"/t"]=now;msg=""}
+ else if(a==="claim"){DEV=id;LS.s("dev",id);as="";armed=null;render();return}
+ else if(a==="savename"){var nm=document.getElementById("mn").value.trim();if(!nm)return;var ex=!D.mem[DEV]&&Object.keys(D.mem).filter(function(k){return norm(D.mem[k].name)===norm(nm)})[0];if(ex){DEV=ex;LS.s("dev",ex);as="";msg="";render();return}o["mem/"+DEV+"/name"]=nm;if(!D.mem[DEV])o["mem/"+DEV+"/t"]=now;msg=""}
  else if(a==="addmem"){var m2=document.getElementById("mn2").value.trim();if(!m2)return;o["mem/"+uid()]={name:m2,t:now}}
  else if(a==="delmem"){if(armed==="dm"+id){o["mem/"+id]=null;armed=null}else{armed="dm"+id;render();return}}
  else if(a==="addpub"){var pn=document.getElementById("pn").value.trim();if(!pn)return;var np2=uid();o["pubs/"+np2]={name:pn,area:document.getElementById("pa").value.trim(),t:now};openP=np2}
@@ -307,6 +321,7 @@ document.addEventListener("change",function(e){
   else if(sl==="miss"){if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/miss/"+who()]=t.value||null}
   W(o2);return}
  if(t.dataset.f==="en"){var cn=parseInt(t.value,10);if(cn>=1&&cn<=40){o2["ed/"+t.dataset.e+"/n"]=cn;W(o2)}else render();return}
+ if(t.dataset.f==="mname"){var mv=t.value.trim();if(mv){o2["mem/"+t.dataset.m+"/name"]=mv;W(o2)}else render();return}
  var f=e.target.dataset.f,i=e.target.dataset.i;if(!f||!D.items[i])return;var o={};
  if(f==="name"){var n=e.target.value.trim();if(!n)return;o["items/"+i+"/name"]=n}
  else{var v=parseFloat(e.target.value.replace(",","."));if(isNaN(v)||v<0)return;o["items/"+i+"/price"]=v}
