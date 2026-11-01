@@ -38,7 +38,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .add{display:flex;gap:8px;margin:0 0 12px}.pr{display:flex;gap:8px;align-items:center;margin-bottom:8px}.pr .n{flex:2}.pr .c{flex:1;text-align:right}
 .row{display:flex;gap:8px;margin-top:10px}.row button{flex:1}
 .log{font-size:14px;color:var(--mute);margin:6px 2px}.log span{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:99px;background:rgba(255,255,255,.06)}
-.empty{color:var(--mute);text-align:center}
+.empty{color:var(--mute);text-align:center}.card .log{margin:0 0 10px}
 .seg{display:flex;padding:4px;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
 .seg button{flex:1;border:0;background:none;color:var(--mute);padding:10px 4px;font-weight:600;border-radius:10px}.seg button.on{background:var(--accbg);color:var(--acc)}
 .p{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;overflow:hidden}
@@ -57,17 +57,19 @@ nav{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:flex-end;bac
 nav .t{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;border-radius:0;background:none;color:var(--mute);font-size:12px;font-weight:600;padding:6px 0}
 nav .t.on{color:var(--acc)}
 nav svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-nav .mid{flex:0 0 68px;width:68px;height:68px;margin:-32px 8px 2px;border-radius:50%;padding:0;border:2px solid rgba(79,209,161,.55);background:radial-gradient(circle at 35% 25%,#37a77f,#145a43);box-shadow:0 6px 22px rgba(30,160,115,.4);display:flex;align-items:center;justify-content:center;color:#eafff6}
-nav .mid.on{box-shadow:0 0 0 4px rgba(79,209,161,.25),0 6px 22px rgba(30,160,115,.55)}
-nav .mid svg{width:34px;height:34px}
+nav .mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;border-radius:0;background:none;color:var(--mute);font-size:12px;font-weight:600;padding:0;margin-top:-32px}
+nav .mid.on{color:var(--acc)}
+nav .orb{width:68px;height:68px;border-radius:50%;border:2px solid rgba(79,209,161,.55);background:radial-gradient(circle at 35% 25%,#37a77f,#145a43);box-shadow:0 6px 22px rgba(30,160,115,.4);display:flex;align-items:center;justify-content:center;color:#eafff6}
+nav .mid.on .orb{box-shadow:0 0 0 4px rgba(79,209,161,.25),0 6px 22px rgba(30,160,115,.55)}
+nav .orb svg{width:34px;height:34px}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav>
 <button class="t" data-a="nav" data-t="acc"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Účet</button>
-<button class="mid" data-a="nav" data-t="prof" aria-label="Profil"><svg viewBox="0 0 24 24"><path d="M6.5 9h8.5v10.5a1 1 0 0 1-1 1H7.5a1 1 0 0 1-1-1z"/><path d="M15 11h2.2a1.8 1.8 0 0 1 1.8 1.8v2.4a1.8 1.8 0 0 1-1.8 1.8H15"/><path d="M6 9a2.2 2.2 0 0 1 1.2-4A3.2 3.2 0 0 1 12 3.8 3 3 0 0 1 15.8 5.4 2.1 2.1 0 0 1 15 9"/><path d="M9.3 12.5v4.5M12.2 12.5v4.5"/></svg></button>
-<button class="t" data-a="nav" data-t="tdb"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>TourDeBeer</button>
+<button class="mid" data-a="nav" data-t="tdb"><span class="orb"><svg viewBox="0 0 24 24"><path d="M6.5 9h8.5v10.5a1 1 0 0 1-1 1H7.5a1 1 0 0 1-1-1z"/><path d="M15 11h2.2a1.8 1.8 0 0 1 1.8 1.8v2.4a1.8 1.8 0 0 1-1.8 1.8H15"/><path d="M6 9a2.2 2.2 0 0 1 1.2-4A3.2 3.2 0 0 1 12 3.8 3 3 0 0 1 15.8 5.4 2.1 2.1 0 0 1 15 9"/><path d="M9.3 12.5v4.5M12.2 12.5v4.5"/></svg></span>TourDeBeer</button>
+<button class="t" data-a="nav" data-t="set"><svg viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>Nastavenia</button>
 </nav>
 <script>
 (function(){
@@ -80,7 +82,7 @@ if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
 function emptyD(){return{items:{},people:{},orders:{},pubs:{},beers:{},ratings:{}}}
-var D=emptyD(),last="",online=false,tab="acc",tsub="pubs",psub="tdb",open=null,armed=null,seeded=false,msg="";
+var D=emptyD(),last="",online=false,tab="acc",tsub="pubs",open=null,armed=null,seeded=false,msg="";
 var app=document.getElementById("app");
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -107,6 +109,7 @@ function rinfo(k,id){var r=(D.ratings[k]||{})[id]||{},v=Object.keys(r).map(funct
 function rateRow(k,id,label){var s=rinfo(k,id),h='<div class="rt"><span class="rl">'+label+'</span><span class="rv">'+(s.n?'Ø '+s.a.toFixed(1).replace(".",",")+' ('+s.n+')':'zatiaľ nič')+'</span><div class="nums">';for(var i=1;i<=5;i++)h+='<button data-a="rate" data-k="'+k+'" data-id="'+id+'" data-v="'+i+'" class="'+(i===s.own?'on':'')+'" aria-label="Známka '+i+' z 5">'+i+'</button>';return h+'</div></div>'}
 function seg(key,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button data-a="seg" data-k="'+key+'" data-v="'+o[0]+'" class="'+(o[0]===cur?'on':'')+'">'+o[1]+'</button>'}).join("")+'</div>'}
 function accView(){
+ if(!(db&&room))return setupView();
  var ids=byT(D.people),all=ids.reduce(function(a,id){return a+total(id)},0);
  var h='<div class="head"><h1>Účet</h1><div class="chip" id="st"></div></div><div class="card total"><span>Spolu na účte</span><b>'+eur(all)+'</b></div>';
  h+='<div class="add"><input id="np" data-enter placeholder="Meno nového človeka" maxlength="40" autocomplete="off"><button class="pri" data-a="addp">Pridať</button></div>';
@@ -132,29 +135,23 @@ function accView(){
 }
 function tdbView(){
  var pub=tsub==="pubs",coll=pub?"pubs":"beers",kinds=pub?[["krcma","Krčma"],["obsluha","Obsluha"]]:[["pivo","Pivo"]],ids=byT(D[coll]);
- var h='<div class="head"><h1>TourDeBeer</h1><div class="chip" id="st"></div></div>'+seg("tsub",[["pubs","Krčmy"],["beers","Piva"]],tsub)+'<div class="log">Známky ako v škole: 1 je najlepšie, 5 najhoršie.</div>';
- if(!ids.length)h+='<div class="card empty">'+(pub?"Zatiaľ žiadna krčma.":"Zatiaľ žiadne pivo.")+' Pridaj ich v profile.<div class="row"><button data-a="nav" data-t="prof" data-p="tdb">Otvoriť profil</button></div></div>';
- ids.forEach(function(id){h+='<div class="p"><div class="gh"><span class="nm">'+esc(D[coll][id].name)+'</span></div>';kinds.forEach(function(k){h+=rateRow(k[0],id,k[1])});h+='</div>'});
+ var h='<div class="head"><h1>TourDeBeer</h1><div class="chip" id="st"></div></div>'+seg("tsub",[["pubs","Krčmy"],["beers","Piva"]],tsub);
+ h+='<div class="add"><input id="ng" data-enter placeholder="'+(pub?"Pridať krčmu":"Pridať pivo")+'" maxlength="40" autocomplete="off"><button class="pri" data-a="addg" data-g="'+coll+'" data-in="ng">Pridať</button></div><div class="log">Známky ako v škole: 1 je najlepšie, 5 najhoršie.</div>';
+ if(!ids.length)h+='<div class="card empty">'+(pub?"Zatiaľ žiadna krčma.":"Zatiaľ žiadne pivo.")+'</div>';
+ ids.forEach(function(id){h+='<div class="p"><div class="gh"><span class="nm">'+esc(D[coll][id].name)+'</span><button class="danger sm" data-a="delg" data-g="'+coll+'" data-id="'+id+'">'+(armed==="dg"+id?"Naozaj?":"Zmazať")+'</button></div>';kinds.forEach(function(k){h+=rateRow(k[0],id,k[1])});h+='</div>'});
  return h;
 }
-function listCard(coll,title,ph,inp){
- var ids=byT(D[coll]),h='<div class="card"><div class="ct">'+title+'<span>'+ids.length+'</span></div><div class="add"><input id="'+inp+'" data-enter placeholder="'+ph+'" maxlength="40" autocomplete="off"><button class="pri" data-a="addg" data-g="'+coll+'" data-in="'+inp+'">Pridať</button></div>';
- ids.forEach(function(id){h+='<div class="li"><span>'+esc(D[coll][id].name)+'</span><button class="danger sm" data-a="delg" data-g="'+coll+'" data-id="'+id+'">'+(armed==="dg"+id?"Naozaj?":"Zmazať")+'</button></div>'});
- if(!ids.length)h+='<div class="log">Zatiaľ prázdne.</div>';
- return h+'</div>';
-}
-function profView(){
- var h='<div class="who"><img src="icon-192-v2.png" alt=""><div><h1>Môj profil</h1><div class="chip" id="st"></div></div></div>'+seg("psub",[["tdb","TourDeBeer"],["set","Nastavenia"]],psub);
- if(psub==="tdb")return h+listCard("pubs","Krčmy, ktoré chcem hodnotiť","Názov krčmy","ngp")+listCard("beers","Piva (databáza)","Názov piva","ngb");
- h+='<div class="card"><div class="ct">Alkohol a ceny</div>';
+function settingsView(){
+ if(!(db&&room))return '<div class="head"><h1>Nastavenia</h1></div>'+setupView().replace('<div class="head"><h1>Účet</h1><div class="chip">Nepripojené</div></div>','');
+ var h='<div class="head"><h1>Nastavenia</h1><div class="chip" id="st"></div></div><div class="card"><div class="ct">Alkohol a ceny</div>';
  Object.keys(D.items).forEach(function(i){var it=D.items[i];
   h+='<div class="pr"><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku">✕</button></div>'});
- h+='<div class="row"><button data-a="addi" data-t="b">+ Pivo</button><button data-a="addi" data-t="l">+ Tvrdé</button></div></div>';
- h+='<div class="card"><div class="ct">Spoločná miestnosť</div><div class="log">Kód miestnosti: <b>'+esc(room)+'</b></div><div class="row"><button data-a="share">'+(msg==="copied"?"Odkaz skopírovaný":"Zdieľať odkaz")+'</button><button data-a="leave">Zmeniť miestnosť</button></div></div>';
- return h;
+ return h+'<div class="row"><button data-a="addi" data-t="b">+ Pivo</button><button data-a="addi" data-t="l">+ Tvrdé</button></div></div>'+roomCard();
 }
+function noRoomView(t){return '<div class="head"><h1>'+t+'</h1></div><div class="card empty">Najprv sa pripoj do miestnosti. Kód zadáš v záložke Účet alebo v Nastaveniach.<div class="row"><button class="pri" data-a="nav" data-t="acc">Prejsť na Účet</button></div></div>'}
+function roomCard(){return '<h2>Spoločná miestnosť</h2><div class="card"><div class="log">Kód miestnosti: <b>'+esc(room)+'</b></div><div class="row"><button data-a="share">'+(msg==="copied"?"Odkaz skopírovaný":"Zdieľať odkaz")+'</button><button data-a="leave">Zmeniť miestnosť</button></div></div>'}
 function setupView(){
- var h='<div class="head"><h1>TourDeBeer</h1></div><div class="card"><div class="ct">Pripojenie k spoločnému účtu</div><div class="log">Zadaj kód miestnosti. Všetci s rovnakým kódom uvidia ten istý účet.</div>';
+ var h='<div class="head"><h1>Účet</h1><div class="chip">Nepripojené</div></div><div class="card"><div class="ct">Pripojenie k spoločnému účtu</div><div class="log">Zadaj kód miestnosti. Všetci s rovnakým kódom uvidia ten istý účet.</div>';
  if(!db)h+='<div class="pr"><input id="dbi" placeholder="Adresa databázy https://…" autocapitalize="off" autocomplete="off"></div>';
  h+='<div class="add"><input id="roi" data-enter placeholder="Kód miestnosti, napr. piatok" value="'+esc(room)+'" autocapitalize="off" autocomplete="off"><button class="pri" data-a="conn">Pripojiť</button></div>';
  if(msg)h+='<div class="log danger">'+esc(msg)+'</div>';
@@ -162,16 +159,15 @@ function setupView(){
 }
 function render(){
  var ready=db&&room;
- document.querySelector("nav").style.display=ready?"flex":"none";
  Array.prototype.forEach.call(document.querySelectorAll("nav [data-t]"),function(n){n.classList.toggle("on",n.dataset.t===tab)});
- app.innerHTML=!ready?setupView():tab==="acc"?accView():tab==="tdb"?tdbView():profView();
+ app.innerHTML=tab==="acc"?accView():tab==="set"?settingsView():!ready?noRoomView("TourDeBeer"):tdbView();
  status();
 }
 document.addEventListener("click",function(e){
  var b=e.target.closest("[data-a]");if(!b)return;
  var a=b.dataset.a,id=b.dataset.id,now=Date.now(),o={};
- if(a==="nav"){tab=b.dataset.t;if(b.dataset.p)psub=b.dataset.p;armed=null;render();window.scrollTo(0,0);return}
- if(a==="seg"){if(b.dataset.k==="tsub")tsub=b.dataset.v;else psub=b.dataset.v;armed=null;render();return}
+ if(a==="nav"){tab=b.dataset.t;armed=null;render();window.scrollTo(0,0);return}
+ if(a==="seg"){tsub=b.dataset.v;armed=null;render();return}
  if(a==="conn"){var di=document.getElementById("dbi"),u=di?di.value.trim().replace(/\/+$/,""):db,r=clean(document.getElementById("roi").value);
   if(u.indexOf("https://")!==0||!r){msg="Zadaj kód miestnosti (a adresu databázy, ak chýba).";render();return}
   db=u;room=r;msg="";LS.s("db",db);LS.s("room",room);D=emptyD();last="";seeded=false;render();poll();return}
