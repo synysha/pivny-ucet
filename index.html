@@ -67,10 +67,10 @@ nav .orb svg{width:34px;height:34px}
 .hl{display:flex;justify-content:space-between;align-items:center;gap:8px}.mascot{width:112px;height:auto;flex:0 0 auto}.tag{margin-top:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
 .stars button:disabled{opacity:1;cursor:default}.stars button.on:disabled{color:var(--gold)}select:disabled{opacity:.7}
 .dim{color:var(--mute)!important}.nm.dim{opacity:.85}.chk{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--ink)}.chk input{flex:0 0 auto;width:22px;height:22px;padding:0;accent-color:var(--acc)}
-.rm{padding:4px 14px 0}.rmh{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;margin:8px 0}.rmh small{font-weight:400;color:var(--mute)}
-.meter{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.meter button{padding:15px 0;font-size:19px;font-weight:700;border:0;border-radius:14px;background:#244538;color:#fff}
+.rm{padding:2px 14px 0}.rmh{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:15px;margin:6px 0 5px}.rmh small{font-weight:400;font-size:13px;color:var(--mute)}
+.meter{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.meter button{padding:8px 0;font-size:16px;font-weight:700;border:0;border-radius:10px;background:#244538;color:#fff}
 .meter button:disabled{opacity:1;cursor:default}.meter .g1.on{background:#17a74a}.meter .g2.on{background:#74b62b}.meter .g3.on{background:#e3b422;color:#1b1400}.meter .g4.on{background:#e8832b}.meter .g5.on{background:#d9412f}
-.rmc{text-align:center;font-weight:700;margin-top:8px;min-height:22px}.rmk{text-align:center;color:var(--mute);font-size:14px;margin:2px 0 10px}
+.rmc{text-align:center;font-weight:700;font-size:14px;margin:4px 0 8px;min-height:18px}.rmc.hint{font-weight:400;font-size:12px;color:var(--mute)}
 .g1t{color:#2fd068}.g2t{color:#8fd33f}.g3t{color:#eec43a}.g4t{color:#f09a45}.g5t{color:#ee6a58}.li b span{font-weight:700}
 .mapbox{height:58vh;min-height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);margin-bottom:8px;background:#0b1a14}.mapbox.pm{height:300px;margin:8px 0}
 .mapbox .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55)}
@@ -319,7 +319,7 @@ function starRow(e,pid,k,label){
  var T={krcma:"Ako hodnotíš krčmu?",pivo:"Ako hodnotíš pivo?",obsluha:"Ako hodnotíš obsluhu?"}[k]||label;
  var h='<div class="rm"><div class="rmh"><span>'+T+'</span><small>'+(v.length?'Ø '+f1(avgs(v))+' ('+v.length+')':'zatiaľ nič')+'</small></div><div class="meter">';
  for(var i=1;i<=5;i++)h+='<button data-a="rate" data-e="'+e+'" data-id="'+pid+'" data-k="'+k+'" data-v="'+i+'" class="g'+i+(i===own?' on':'')+'" aria-label="Známka '+i+' z 5"'+(lk?' disabled':'')+'>'+i+'</button>';
- return h+'</div><div class="rmc'+(own?' g'+own+'t':'')+'">'+(own?GL[own]:'&nbsp;')+'</div><div class="rmk">'+(lk?'Ročník je uzavretý.':'Kliknutím vyberieš hodnotenie.')+'</div></div>';
+ return h+'</div><div class="rmc'+(own?' g'+own+'t':' hint')+'">'+(own?GL[own]:(lk?'Ročník je uzavretý.':'Kliknutím vyberieš hodnotenie.'))+'</div></div>';
 }
 function pubRate(e,pid){
  var P=D.pubs[pid]||{name:"(zmazaná krčma)"},sp=D.ed[e].pubs[pid],R=(D.rt[e]||{})[pid]||{},w=who(),lk=!!D.ed[e].lock;
