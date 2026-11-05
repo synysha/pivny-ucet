@@ -67,7 +67,7 @@ nav .orb svg{width:34px;height:34px}
 .logo{margin:30px 0 0;border-radius:18px;overflow:hidden;background:#e9e2db}.logo img{display:block;width:100%;height:auto}.logo+.head{padding-top:14px}
 .hl{display:flex;justify-content:space-between;align-items:center;gap:8px}.mascot{width:112px;height:auto;flex:0 0 auto}.tag{margin-top:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
 .stars button:disabled{opacity:1;cursor:default}.stars button.on:disabled{color:var(--gold)}select:disabled{opacity:.7}
-.dim{color:var(--mute)!important}.nm.dim{opacity:.85}.tapc{margin:0!important}.li .chk input{margin:0}.chk{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--ink)}.chk input{flex:0 0 auto;width:22px;height:22px;padding:0;accent-color:var(--acc)}
+.dim{color:var(--mute)!important}.nm.dim{opacity:.85}.tapc{margin:0!important}.mini{font-size:12px;color:var(--mute);margin:0 0 0 auto!important;gap:6px}.mini input{width:16px!important;height:16px!important}select.dim{color:var(--mute)}.li .chk input{margin:0}.chk{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--ink)}.chk input{flex:0 0 auto;width:22px;height:22px;padding:0;accent-color:var(--acc)}
 .rm{padding:0 14px}.rmh{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:14px;margin:5px 0 4px}.rmh small{font-weight:400;font-size:12px;color:var(--mute)}
 .meter{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.meter button{padding:5px 0;font-size:14px;font-weight:700;border:0;border-radius:9px;background:#244538;color:#fff}
 .meter button:disabled{opacity:1;cursor:default}.meter .g1.on{background:#17a74a}.meter .g2.on{background:#74b62b}.meter .g3.on{background:#e3b422;color:#1b1400}.meter .g4.on{background:#e8832b}.meter .g5.on{background:#d9412f}
@@ -242,7 +242,8 @@ function mapView(){
  mapItemsCur=mapItems(cur);mapRouteCur=(cur!=="all"&&mapRoute);
  if(cur!=="all")h+='<div class="row" style="margin:0 0 8px"><button class="sm" data-a="mroute">Trasa čiarou: '+(mapRoute?"zapnutá":"vypnutá")+'</button></div>';
  var nop=mapItemsCur.filter(function(it){return it.lat==null});
- h+='<div id="map" class="mapbox"></div><div class="log" id="mapmsg">'+(cur==="all"?"Číslo v bode = v koľkých ročníkoch krčma bola.":"Číslo v bode = poradie krčmy v ročníku.")+' Prerušovaný bod je približná poloha.</div>';
+ mapTitle=cur==="all"?"Všetky krčmy":((D.ed[cur].no?D.ed[cur].no+". ročník · ":"")+D.ed[cur].year);
+ h+='<div id="map" class="mapbox"></div><div class="row" style="margin:0 0 6px"><button data-a="mapjpg">Export mapy do JPG</button></div><div class="log" id="mapmsg">'+(cur==="all"?"Číslo v bode = v koľkých ročníkoch krčma bola.":"Číslo v bode = poradie krčmy v ročníku.")+' Prerušovaný bod je približná poloha.</div>';
  if(nop.length)h+='<div class="card"><div class="ct">Bez polohy<span>'+nop.length+'</span></div><div class="log" style="margin:0">'+nop.map(function(it){return esc(it.name)}).join(", ")+'. Polohu nastavíš v Nastaveniach, v časti Krčmy.</div></div>';
  return h;
 }
@@ -324,6 +325,27 @@ function exportEd(e){
  ["xl/styles.xml","xl/sharedStrings.xml","xl/theme/theme1.xml","docProps/core.xml","docProps/app.xml"].forEach(function(nm){out.push([nm,files[nm]])});
  var blob=zipWrite(out),an=document.createElement("a");an.href=URL.createObjectURL(blob);an.download="TourDeBeer_"+String(E.year).replace(/[^A-Za-z0-9]+/g,"_")+".xlsx";document.body.appendChild(an);an.click();setTimeout(function(){an.remove();URL.revokeObjectURL(an.href)},3000);
 }
+var mapTitle="";
+function exportMapJpg(){
+ var msg=document.getElementById("mapmsg");function say(t){if(msg)msg.textContent=t}
+ if(!mapInst){say("Mapa ešte nie je načítaná.");return}
+ var size=mapInst.getSize(),z=mapInst.getZoom(),c=mapInst.getCenter(),W=size.x,H=size.y,S=2,z2=Math.min(z+1,19),f=Math.pow(2,z2)*256,k=S/Math.pow(2,z2-z);
+ function px(lat,lng){var sn=Math.sin(lat*Math.PI/180);return[(lng+180)/360*f,(0.5-Math.log((1+sn)/(1-sn))/(4*Math.PI))*f]}
+ var cp=px(c.lat,c.lng),ox=cp[0]-W*S/2/k,oy=cp[1]-H*S/2/k,cv=document.createElement("canvas");cv.width=W*S;cv.height=H*S;
+ var g=cv.getContext("2d");g.fillStyle="#e9e4dc";g.fillRect(0,0,cv.width,cv.height);
+ var x0=Math.floor(ox/256),x1=Math.floor((ox+W*S/k)/256),y0=Math.floor(oy/256),y1=Math.floor((oy+H*S/k)/256),n=Math.pow(2,z2),jobs=[];
+ for(var ty=y0;ty<=y1;ty++)for(var tx=x0;tx<=x1;tx++)(function(tx,ty){if(ty<0||ty>=n)return;jobs.push(new Promise(function(res){var im=new Image();im.crossOrigin="anonymous";im.onload=function(){g.drawImage(im,(tx*256-ox)*k,(ty*256-oy)*k,256*k,256*k);res(1)};im.onerror=function(){res(0)};im.src="https://tile.openstreetmap.org/"+z2+"/"+(((tx%n)+n)%n)+"/"+ty+".png"}))})(tx,ty);
+ say("Pripravujem obrázok…");
+ Promise.all(jobs).then(function(r){
+  var pts=[];mapItemsCur.forEach(function(it){if(it.lat==null)return;var q=px(it.lat,it.lng);pts.push({x:(q[0]-ox)*k,y:(q[1]-oy)*k,it:it})});
+  if(mapRouteCur&&pts.length>1){g.save();g.setLineDash([8*S,8*S]);g.strokeStyle="#0e8f66";g.lineWidth=3*S;g.lineJoin="round";g.beginPath();pts.forEach(function(q,i){if(i)g.lineTo(q.x,q.y);else g.moveTo(q.x,q.y)});g.stroke();g.restore()}
+  pts.forEach(function(q){var it=q.it;g.beginPath();g.arc(q.x,q.y,15*S,0,7);g.fillStyle=it.closed?"#6b7a73":(it.geo==="approx"?"#ffffff":"#2fbf8f");g.fill();g.lineWidth=2.5*S;g.strokeStyle=it.geo==="approx"?"#0e8f66":"#ffffff";if(it.geo==="approx")g.setLineDash([4*S,3*S]);g.stroke();g.setLineDash([]);g.fillStyle=it.closed?"#eef2ee":"#04140e";g.font="bold "+(13*S)+"px sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(String(it.label),q.x,q.y+S*.5)});
+  g.fillStyle="rgba(6,17,13,.82)";g.fillRect(0,0,cv.width,46*S);g.fillStyle="#eef6f1";g.font="bold "+(18*S)+"px sans-serif";g.textAlign="left";g.textBaseline="middle";g.fillText("TourDeBeer  ·  "+mapTitle,14*S,23*S);
+  g.font=(11*S)+"px sans-serif";g.textAlign="right";g.textBaseline="alphabetic";var at="© OpenStreetMap",tw=g.measureText(at).width;g.fillStyle="rgba(255,255,255,.8)";g.fillRect(cv.width-tw-14*S,cv.height-20*S,tw+14*S,20*S);g.fillStyle="#333";g.fillText(at,cv.width-6*S,cv.height-6*S);
+  cv.toBlob(function(b){if(!b){say("Export sa nepodaril.");return}var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="TourDeBeer_mapa_"+norm(mapTitle).replace(/[^a-z0-9]+/g,"_")+".jpg";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(a.href)},3000);say("Hotovo, obrázok je stiahnutý.")},"image/jpeg",0.92);
+ }).catch(function(){say("Export sa nepodaril.")});
+}
+function beerOff(pid,name){var P=D.pubs[pid];if(!P||!P.beers)return false;return Object.keys(P.beers).some(function(b){return P.beers[b].off&&norm(P.beers[b].name)===norm(name)})}
 function norm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
 function seedObj(pubs){var o={},have={},cnt={};Object.keys(pubs||{}).forEach(function(k){have[norm(pubs[k].name)]=1});
  SEED.forEach(function(r,i){if(have[norm(r[0])])return;var bs={};r[2].forEach(function(n,j){bs["b"+(j+1)]={name:n,t:j}});var ap=areaPos(r[1],cnt[r[1]]=(cnt[r[1]]||0)+1),pb={name:r[0],area:r[1],t:1000+i,beers:bs};if(ap){pb.lat=ap[0];pb.lng=ap[1];pb.geo="approx"}o["pubs/s"+(i<9?"0":"")+(i+1)]=pb});
@@ -417,7 +439,7 @@ function pubRate(e,pid){
  var beers=byT(P.beers||{}).filter(function(b){return !P.beers[b].off}).map(function(b){return P.beers[b].name}),cur=sp.beer||"";
  if(cur&&beers.indexOf(cur)<0)beers.push(cur);
  var h='<div class="p"><div class="gh"><span class="nm'+(P.closed?' dim':'')+'">'+esc(P.name)+(P.area?'<small class="ar">'+esc(P.area)+'</small>':'')+'</span>'+(lk?'':'<button class="danger sm" data-a="unpick" data-e="'+e+'" data-id="'+pid+'">'+(armed==="up"+pid?"Naozaj?":"Odobrať")+'</button>')+'</div>';
- h+='<div class="rt"><span class="rl">Hodnotené pivo</span><select data-sel="beer" data-e="'+e+'" data-id="'+pid+'"'+(lk?' disabled':'')+'><option value="">vyber pivo</option>'+beers.map(function(n){return '<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join("")+'</select></div>';
+ h+='<div class="rt"><span class="rl">Hodnotené pivo</span><select data-sel="beer" data-e="'+e+'" data-id="'+pid+'"'+(lk?' disabled':'')+(beerOff(pid,cur)?' class="dim"':'')+'><option value="">vyber pivo</option>'+beers.map(function(n){return '<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join("")+'</select></div>';
  KIND.forEach(function(k){h+=starRow(e,pid,k[0],k[1])});
  var oth=Object.keys(D.mem).filter(function(m){return m!==w&&KIND.some(function(k){return (R[k[0]]||{})[m]})});
  h+='<div class="rt"><button class="sm" data-a="oth" data-id="'+pid+'">Ostatní ('+oth.length+')</button></div>';
@@ -435,11 +457,11 @@ function statView(){
   var mwp=missWin(E);if(mwp)M[mwp]=(M[mwp]||0)+1;
   Object.keys(R).forEach(function(pid){var pb=D.pubs[pid];if(!pb)return;var bn=(((E.pubs||{})[pid]||{}).beer||"").trim();
    KIND.forEach(function(k){var v=vals((R[pid]||{})[k[0]]);if(!v.length)return;
-    var p=P[pid]=P[pid]||{name:pb.name,k:{}},c=p.k[k[0]]=p.k[k[0]]||[];v.forEach(function(x){c.push(x)});
-    if(k[0]==="pivo"&&bn){var bk=norm(bn)+"|"+pid,b=B[bk]=B[bk]||{name:bn,pub:pb.name,v:[]};v.forEach(function(x){b.v.push(x)})}})})});
- function box(t,arr,fmt){var s='<h2>'+t+'</h2><div class="card">';if(!arr.length)return s+'<div class="log">Zatiaľ bez hodnotení.</div></div>';arr.slice(0,15).forEach(function(x,i){s+='<div class="li"><span>'+(i+1)+'. '+esc(x.name)+'<small class="ar">'+fmt(x)+'</small></span><b>'+f1(x.a)+'</b></div>'});return s+'</div>'}
- var pl=Object.keys(P).map(function(id){var p=P[id];return{name:p.name,p:p,a:avgs(Object.keys(p.k).map(function(k){return avgs(p.k[k])}))}}).sort(function(a,b){return a.a-b.a});
- var bl=Object.keys(B).map(function(k){return{name:B[k].name,pub:B[k].pub,a:avgs(B[k].v),n:B[k].v.length}}).sort(function(a,b){return a.a-b.a});
+    var p=P[pid]=P[pid]||{name:pb.name,k:{},closed:!!pb.closed},c=p.k[k[0]]=p.k[k[0]]||[];v.forEach(function(x){c.push(x)});
+    if(k[0]==="pivo"&&bn){var bk=norm(bn)+"|"+pid,b=B[bk]=B[bk]||{name:bn,pub:pb.name,v:[],off:beerOff(pid,bn)};v.forEach(function(x){b.v.push(x)})}})})});
+ function box(t,arr,fmt){var s='<h2>'+t+'</h2><div class="card">';if(!arr.length)return s+'<div class="log">Zatiaľ bez hodnotení.</div></div>';arr.slice(0,15).forEach(function(x,i){s+='<div class="li"><span>'+(i+1)+'. '+(x.off?'<span class="dim">'+esc(x.name)+'</span>':esc(x.name))+'<small class="ar">'+fmt(x)+'</small></span><b>'+f1(x.a)+'</b></div>'});return s+'</div>'}
+ var pl=Object.keys(P).map(function(id){var p=P[id];return{name:p.name,off:p.closed,p:p,a:avgs(Object.keys(p.k).map(function(k){return avgs(p.k[k])}))}}).sort(function(a,b){return a.a-b.a});
+ var bl=Object.keys(B).map(function(k){return{name:B[k].name,off:B[k].off,pub:B[k].pub,a:avgs(B[k].v),n:B[k].v.length}}).sort(function(a,b){return a.a-b.a});
   h+=box("Poradie krčiem",pl,function(x){return KIND.map(function(k){return k[1]+" "+(x.p.k[k[0]]?f1(avgs(x.p.k[k[0]])):"–")}).join(" · ")});
  h+=box("Poradie pív",bl,function(x){return esc(x.pub)+" · "+x.n+" hodnotení"});
   var E0=D.ed[cur],mt=E0.mt||(missWin(E0)?(D.pubs[missWin(E0)]||{}).name:"");
@@ -476,11 +498,11 @@ function tdbView(){
  return h;
 }
 function profView(){
- var adm=isAdmin(),me=D.mem[DEV],ms=Object.keys(D.mem).filter(function(k){return !D.mem[k].hidden}).sort(function(a,b){return (D.mem[a].t||0)-(D.mem[b].t||0)});
+ var adm=isAdmin(),me=D.mem[DEV],ms=Object.keys(D.mem).filter(function(k){return !D.mem[k].hidden}).sort(function(a,b){return (D.mem[a].inactive?1:0)-(D.mem[b].inactive?1:0)||(D.mem[a].t||0)-(D.mem[b].t||0)});
  var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" data-orig="'+esc(me?me.name:"")+'" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename"'+(me?' style="display:none"':'')+'>Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div></div>';
  h+=adminCard();
  h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>';
- ms.forEach(function(m){h+='<div class="li" style="flex-wrap:wrap"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno" style="flex:1 1 100%"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(m===DEV?'<span class="log" style="margin:0">Toto som ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'">To som ja</button>'+(adm?'<button class="danger sm" data-a="delmem" data-id="'+m+'">'+(armed==="dm"+m?"Naozaj?":"Zmazať")+'</button>':''))+(adm?'<label class="chk" style="flex:1 1 100%;margin:6px 0 0"><input type="checkbox" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+'> Už sa nezúčastňuje</label>':'')+'</div>'});
+ ms.forEach(function(m){h+='<div class="li" style="flex-wrap:wrap"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno" style="flex:1 1 100%"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(m===DEV?'<span class="log" style="margin:0">Toto som ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'">To som ja</button>'+(adm?'<button class="danger sm" data-a="delmem" data-id="'+m+'">'+(armed==="dm"+m?"Naozaj?":"Zmazať")+'</button>':''))+(adm?'<label class="chk mini"><input type="checkbox" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+'> Už sa nezúčastňuje</label>':'')+'</div>'});
  return h+'<div class="add" style="margin-top:10px"><input id="mn2" data-enter placeholder="Pridať účastníka bez apky" maxlength="30"><button class="pri" data-a="addmem">Pridať</button></div></div>';
 }
 function pubsView(){
@@ -492,7 +514,7 @@ function pubsView(){
    h+='<div class="log">Poloha: <b>'+pos+'</b></div>'+(adm?'<div class="row" style="margin:0 0 8px"><button class="sm" data-a="geoone" data-id="'+id+'">Nájsť v OpenStreetMap</button><button class="sm" data-a="pickpos" data-id="'+id+'">'+(pickPub===id?"Zavrieť mapu":"Nastaviť na mape")+'</button></div>':'');
    if(adm&&pickPub===id)h+='<div id="pmap" class="mapbox pm"></div><div class="log">Ťukni na mapu tam, kde krčma stojí. Marker môžeš aj potiahnuť.</div><div class="row" style="margin:0 0 8px"><button class="pri" data-a="savepos" data-id="'+id+'">Uložiť polohu</button><button data-a="cancelpos">Zrušiť</button></div>';
    h+='<div class="log">Zaškrtnuté pivo sa ešte čapuje.</div>';
-   bs.forEach(function(b){var off=P.beers[b].off;h+='<div class="li"><label class="chk tapc"><input type="checkbox" data-f="btap" data-id="'+id+'" data-b="'+b+'"'+(off?'':' checked')+' aria-label="Čapuje sa"></label><input data-f="bname" data-id="'+id+'" data-b="'+b+'" value="'+esc(P.beers[b].name)+'" aria-label="Názov piva"'+(off?' class="dim"':'')+'><button class="danger sm" data-a="delbeer" data-id="'+id+'" data-b="'+b+'" aria-label="Zmazať pivo">✕</button></div>'});
+   bs.forEach(function(b){var off=P.beers[b].off;h+='<div class="li"><input data-f="bname" data-id="'+id+'" data-b="'+b+'" value="'+esc(P.beers[b].name)+'" aria-label="Názov piva"'+(off?' class="dim"':'')+'><button class="danger sm" data-a="delbeer" data-id="'+id+'" data-b="'+b+'" aria-label="Zmazať pivo">✕</button><label class="chk tapc"><input type="checkbox" data-f="btap" data-id="'+id+'" data-b="'+b+'"'+(off?'':' checked')+' aria-label="Čapuje sa"></label></div>'});
    h+='<div class="add" style="margin-top:8px"><input id="bn" data-enter placeholder="Pridať čapované pivo" maxlength="40"><button class="pri" data-a="addbeer" data-id="'+id+'">Pridať</button></div>'+(adm?'<div class="row"><button class="danger" data-a="delpub" data-id="'+id+'">'+(armed==="pb"+id?"Naozaj zmazať krčmu?":"Zmazať krčmu")+'</button></div>':'')+'</div>'}});
  if(adm)h+='<div class="row" style="margin-top:12px"><button data-a="geoall">Nájsť polohy automaticky</button></div>'+(geoMsg?'<div class="log">'+esc(geoMsg)+'</div>':'');
  return h+'</div>';
@@ -557,6 +579,7 @@ document.addEventListener("click",function(e){
  else if(a==="admin"){var pv4=document.getElementById("apn").value.trim();if(hpin(pv4)===D.meta.apin){LS.s("adm",D.meta.apin);amsg=""}else amsg="Nesprávny PIN.";render();return}
  else if(a==="adminoff"){LS.s("adm","");amsg="";render();return}
  else if(a==="exportx"){try{exportEd(b.dataset.e);xMsg=""}catch(x){xMsg="Export sa nepodaril: "+x.message}render();return}
+ else if(a==="mapjpg"){exportMapJpg();return}
  else if(a==="mroute"){mapRoute=!mapRoute;render();return}
  else if(a==="mc"){mapsc=id;render();return}
  else if(a==="pickpos"){pickPub=pickPub===id?null:id;tmpPos=null;render();return}
