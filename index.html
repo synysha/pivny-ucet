@@ -48,7 +48,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .nm{font-weight:700;font-size:18px}.tot{font-size:21px;font-weight:800}.tot.z{color:var(--mute)}
 .pb{padding:0 14px 14px;border-top:1px solid var(--line)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.grid button{text-align:left;padding:10px 12px}
-.grid small{display:block;color:var(--mute)}.grid .l{border-color:rgba(233,180,76,.45);background:rgba(233,180,76,.09)}
+.grid small{display:block;color:var(--mute)}.grid .l{border-color:rgba(255,255,255,.65)}
 .gh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px 4px}
 .rt{display:flex;flex-wrap:wrap;align-items:center;padding:4px 14px 0}.p .rt:last-child{padding-bottom:6px}
 .rl{flex:1;font-weight:600}.rv{font-size:13px;color:var(--mute)}
@@ -75,8 +75,8 @@ nav .orb svg{width:34px;height:34px}
 .g1t{color:#2fd068}.g2t{color:#8fd33f}.g3t{color:#eec43a}.g4t{color:#f09a45}.g5t{color:#ee6a58}.li b span{font-weight:700}
 .mapbox{height:58vh;min-height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);margin-bottom:8px;background:#0b1a14}.mapbox.pm{height:300px;margin:8px 0}
 .mapbox .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.55)}
-.pin span{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--acc);color:#04140e;font-weight:800;font-size:13px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-.pin.off span{background:#6b7a73;color:#e8eee9}.pin.apx span{background:#0b1f18;color:var(--acc);border:2px dashed var(--acc)}.pin.sel span{width:34px;height:34px;background:#e3b422;color:#1b1400;font-size:16px}
+.pin span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--acc);color:#04140e;font-weight:800;font-size:11px;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pin.off span{background:#6b7a73;color:#e8eee9}.pin.apx span{background:#0b1f18;color:var(--acc);border:2px dashed var(--acc)}.pin.sel span{width:26px;height:26px;background:#e3b422;color:#1b1400;font-size:13px}
 select{flex:1;min-width:0;font:inherit;color:var(--ink);background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px;max-width:100%}option{background:#0b1a14}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px}.chips button{flex:0 0 auto;white-space:nowrap}.chips button.on{background:var(--accbg);color:var(--acc);border-color:var(--acc)}
 .stars{display:flex;gap:2px;width:100%;margin:2px 0 8px}.stars button{flex:1;border:0;background:none;font-size:32px;line-height:1;color:rgba(255,255,255,.2);padding:6px 0}.stars button.on{color:var(--gold)}
@@ -189,7 +189,7 @@ function buildMap(el){
  if(el._lf)return;el._lf=1;
  var m=L.map(el).setView([48.7745,18.6240],13);tiles(m);var pts=[];
  mapItemsCur.forEach(function(it){if(it.lat==null)return;pts.push([it.lat,it.lng]);
-  L.marker([it.lat,it.lng],{icon:L.divIcon({className:"pin"+(it.closed?" off":"")+(it.geo==="approx"?" apx":""),html:"<span>"+esc(String(it.label))+"</span>",iconSize:[30,30],iconAnchor:[15,15]})}).addTo(m).bindPopup("<b>"+esc(it.name)+"</b>"+(it.area?"<br>"+esc(it.area):"")+(it.sub?"<br>"+esc(it.sub):"")+(it.geo==="approx"?"<br><i>približná poloha</i>":it.geo==="osm"?"<br><i>nájdené automaticky</i>":""))});
+  L.marker([it.lat,it.lng],{icon:L.divIcon({className:"pin"+(it.closed?" off":"")+(it.geo==="approx"?" apx":""),html:"<span>"+esc(String(it.label))+"</span>",iconSize:[20,20],iconAnchor:[10,10]})}).addTo(m).bindPopup("<b>"+esc(it.name)+"</b>"+(it.area?"<br>"+esc(it.area):"")+(it.sub?"<br>"+esc(it.sub):"")+(it.geo==="approx"?"<br><i>približná poloha</i>":it.geo==="osm"?"<br><i>nájdené automaticky</i>":""))});
  if(mapRouteCur&&pts.length>1)L.polyline(pts,{color:"#4fd1a1",weight:3,opacity:.85,dashArray:"8 8"}).addTo(m);
  if(pts.length>1)m.fitBounds(pts,{padding:[30,30],maxZoom:15});else if(pts.length===1)m.setView(pts[0],15);
  mapInst=m;
@@ -197,7 +197,7 @@ function buildMap(el){
 function buildPicker(el){
  if(el._lf)return;el._lf=1;
  var P=D.pubs[pickPub]||{},c=P.lat!=null?[P.lat,P.lng]:[48.7745,18.6240],m=L.map(el).setView(c,P.lat!=null?16:14),mk=null;tiles(m);
- function put(ll){tmpPos=[ll.lat,ll.lng];if(mk)mk.setLatLng(ll);else{mk=L.marker(ll,{draggable:true,icon:L.divIcon({className:"pin sel",html:"<span>★</span>",iconSize:[34,34],iconAnchor:[17,17]})}).addTo(m);mk.on("dragend",function(){var q=mk.getLatLng();tmpPos=[q.lat,q.lng]})}}
+ function put(ll){tmpPos=[ll.lat,ll.lng];if(mk)mk.setLatLng(ll);else{mk=L.marker(ll,{draggable:true,icon:L.divIcon({className:"pin sel",html:"<span>★</span>",iconSize:[26,26],iconAnchor:[13,13]})}).addTo(m);mk.on("dragend",function(){var q=mk.getLatLng();tmpPos=[q.lat,q.lng]})}}
  if(P.lat!=null)put({lat:P.lat,lng:P.lng});
  m.on("click",function(e){put(e.latlng)});pickInst=m;
 }
@@ -339,7 +339,7 @@ function exportMapJpg(){
  Promise.all(jobs).then(function(r){
   var pts=[];mapItemsCur.forEach(function(it){if(it.lat==null)return;var q=px(it.lat,it.lng);pts.push({x:(q[0]-ox)*k,y:(q[1]-oy)*k,it:it})});
   if(mapRouteCur&&pts.length>1){g.save();g.setLineDash([8*S,8*S]);g.strokeStyle="#0e8f66";g.lineWidth=3*S;g.lineJoin="round";g.beginPath();pts.forEach(function(q,i){if(i)g.lineTo(q.x,q.y);else g.moveTo(q.x,q.y)});g.stroke();g.restore()}
-  pts.forEach(function(q){var it=q.it;g.beginPath();g.arc(q.x,q.y,15*S,0,7);g.fillStyle=it.closed?"#6b7a73":(it.geo==="approx"?"#ffffff":"#2fbf8f");g.fill();g.lineWidth=2.5*S;g.strokeStyle=it.geo==="approx"?"#0e8f66":"#ffffff";if(it.geo==="approx")g.setLineDash([4*S,3*S]);g.stroke();g.setLineDash([]);g.fillStyle=it.closed?"#eef2ee":"#04140e";g.font="bold "+(13*S)+"px sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(String(it.label),q.x,q.y+S*.5)});
+  pts.forEach(function(q){var it=q.it;g.beginPath();g.arc(q.x,q.y,10*S,0,7);g.fillStyle=it.closed?"#6b7a73":(it.geo==="approx"?"#ffffff":"#2fbf8f");g.fill();g.lineWidth=1.8*S;g.strokeStyle=it.geo==="approx"?"#0e8f66":"#ffffff";if(it.geo==="approx")g.setLineDash([4*S,3*S]);g.stroke();g.setLineDash([]);g.fillStyle=it.closed?"#eef2ee":"#04140e";g.font="bold "+(11*S)+"px sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(String(it.label),q.x,q.y+S*.5)});
   g.fillStyle="rgba(6,17,13,.82)";g.fillRect(0,0,cv.width,46*S);g.fillStyle="#eef6f1";g.font="bold "+(18*S)+"px sans-serif";g.textAlign="left";g.textBaseline="middle";g.fillText("TourDeBeer  ·  "+mapTitle,14*S,23*S);
   g.font=(11*S)+"px sans-serif";g.textAlign="right";g.textBaseline="alphabetic";var at="© OpenStreetMap",tw=g.measureText(at).width;g.fillStyle="rgba(255,255,255,.8)";g.fillRect(cv.width-tw-14*S,cv.height-20*S,tw+14*S,20*S);g.fillStyle="#333";g.fillText(at,cv.width-6*S,cv.height-6*S);
   cv.toBlob(function(b){if(!b){say("Export sa nepodaril.");return}var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="TourDeBeer_mapa_"+norm(mapTitle).replace(/[^a-z0-9]+/g,"_")+".jpg";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(a.href)},3000);say("Hotovo, obrázok je stiahnutý.")},"image/jpeg",0.92);
