@@ -106,8 +106,8 @@ var room=clean(q.get("r")||LS.g("room"));
 if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
-function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{}}}
-var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,seeded4=false,seeded5=false,seeded6=false,seeded7=false,seeded8=false,seeded9=false,seeded10=false,seeded11=false,seeded12=false,amsg="",open=null,armed=null,seeded=false,msg="";
+function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{},ind:{}}}
+var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,seeded4=false,seeded5=false,seeded6=false,seeded7=false,seeded8=false,seeded9=false,seeded10=false,seeded11=false,seeded12=false,amsg="",acsub=(function(){try{return localStorage.getItem("acsub")==="ind"?"ind":"grp"}catch(e){return "grp"}})(),open=null,armed=null,seeded=false,msg="";
 var app=document.getElementById("app");
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -124,7 +124,7 @@ function poll(){
  if(!db||!room)return Promise.resolve();
  return api("GET","").then(function(d){
   online=true;d=d||{};
-  var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},mem:d.mem||{},ed:d.ed||{},rt:d.rt||{},meta:d.meta||{}},j=JSON.stringify(n);
+  var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},mem:d.mem||{},ed:d.ed||{},rt:d.rt||{},meta:d.meta||{},ind:d.ind||{}},j=JSON.stringify(n);
   if(!Object.keys(n.items).length&&!seeded){seeded=true;W({items:DEF});return}
   if(!n.meta.seed1&&!seeded2){seeded2=true;W(seedObj(n.pubs));return}
   if(n.meta.seed1&&!n.meta.fix2&&!seeded4){seeded4=true;W(fixObj(n));return}
@@ -145,8 +145,21 @@ var SEED=[["Woodstock Bojnice","Bojnice",["Baník 12","Starigáň 10"]],["Slávi
 function seg(key,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button data-a="seg" data-k="'+key+'" data-v="'+o[0]+'" class="'+(o[0]===cur?'on':'')+'">'+o[1]+'</button>'}).join("")+'</div>'}
 function accView(){
  if(!(db&&room))return setupView();
+ return '<div class="head"><h1>Účet</h1><div class="chip" id="st"></div></div>'+seg("acsub",[["ind","Individuálny"],["grp","Skupinový"]],acsub)+(acsub==="ind"?indView():grpView());
+}
+function indView(){
+ var o=(D.ind[DEV]||{}).orders||{},ks=byT(o),t=ks.reduce(function(a,k){return a+o[k].price},0),me=D.mem[DEV],cnt={};
+ var h='<div class="card total"><span>'+(me?esc(me.name):"Môj účet")+'</span><b>'+eur(t)+'</b></div><div class="card"><div class="grid" style="margin-top:0">';
+ byT(D.items).concat(Object.keys(D.items)).filter(function(v,i,a){return a.indexOf(v)===i}).forEach(function(i){var it=D.items[i];h+='<button data-a="ibuy" data-i="'+i+'" class="'+(it.type==="l"?"l":"")+'">'+esc(it.name)+'<small>'+eur(it.price)+'</small></button>'});
+ h+='</div>';
+ ks.forEach(function(k){cnt[o[k].name]=(cnt[o[k].name]||0)+1});
+ var kk=Object.keys(cnt);if(kk.length){h+='<div class="log">';kk.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
+ h+='<div class="row"><button data-a="iundo"'+(ks.length?'':' disabled')+'>Zrušiť posledné</button><button data-a="ipaid"'+(ks.length?'':' disabled')+'>'+(armed==="ipaid"?"Naozaj vynulovať?":"Zaplatil")+'</button></div></div>';
+ return h+'<div class="log">Tento účet vidíš len ty. Ostatným sa nezobrazuje.</div>';
+}
+function grpView(){
  var ids=byT(D.people),all=ids.reduce(function(a,id){return a+total(id)},0);
- var h='<div class="head"><h1>Účet</h1><div class="chip" id="st"></div></div><div class="card total"><span>Spolu na účte</span><b>'+eur(all)+'</b></div>';
+ var h='<div class="card total"><span>Spolu na účte</span><b>'+eur(all)+'</b></div>';
  var used={};ids.forEach(function(id){used[norm(D.people[id].name)]=1});
  var avail=Object.keys(D.mem).filter(function(m){var nm=D.mem[m].name;return nm.charAt(0)!=="("&&!D.mem[m].hidden&&!D.mem[m].inactive&&!used[norm(nm)]}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
  h+='<div class="add"><select id="np"><option value="">vyber člena</option>'+avail.map(function(m){return '<option value="'+m+'">'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="addp">Pridať</button></div>'+(Object.keys(D.mem).length?'':'<div class="log">Najprv pridaj účastníkov v Nastaveniach, v časti Profil.</div>');
@@ -556,7 +569,7 @@ document.addEventListener("click",function(e){
  if((a==="geoone"||a==="geoall"||a==="pickpos"||a==="savepos"||a==="delpub"||a==="delmem")&&!isAdmin())return;
  if((a==="rate"||a==="unpick"||a==="pick")&&D.ed[b.dataset.e]&&D.ed[b.dataset.e].lock)return;
  if(a==="nav"){tab=b.dataset.t;armed=null;render();window.scrollTo(0,0);return}
- if(a==="seg"){if(b.dataset.k==="tsub")tsub=b.dataset.v;else ssub=b.dataset.v;armed=null;render();return}
+ if(a==="seg"){if(b.dataset.k==="tsub")tsub=b.dataset.v;else if(b.dataset.k==="acsub"){acsub=b.dataset.v;LS.s("acsub",acsub)}else ssub=b.dataset.v;armed=null;render();return}
  if(a==="conn"){var di=document.getElementById("dbi"),u=di?di.value.trim().replace(/\/+$/,""):db,r=clean(document.getElementById("roi").value);
   if(u.indexOf("https://")!==0||!r){msg="Zadaj kód miestnosti (a adresu databázy, ak chýba).";render();return}
   db=u;room=r;msg="";LS.s("db",db);LS.s("room",room);D=emptyD();last="";seeded=false;render();poll();return}
@@ -573,7 +586,7 @@ document.addEventListener("click",function(e){
  else if(a==="split"){var sv=parseFloat(document.getElementById("sp").value.replace(",","."));var pk=Object.keys(D.people);if(isNaN(sv)||sv<=0||!pk.length)return;var sh=Math.round(sv/pk.length*100)/100;pk.forEach(function(k){o["orders/"+k+"/"+uid()]={name:"Odpočet "+eur(sh),price:-sh,t:now}});armed=null}
  else if(a==="addi"){o["items/"+uid()]={name:b.dataset.t==="l"?"Nové tvrdé 4 cl":"Nové pivo",price:2,type:b.dataset.t,t:now}}
  else if(a==="deli"){o["items/"+b.dataset.i]=null}
- else if(a==="backup"){try{var bl=new Blob([JSON.stringify({room:room,date:new Date().toISOString(),data:D},null,1)],{type:"application/json"}),an=document.createElement("a");an.href=URL.createObjectURL(bl);an.download="tourdebeer-zaloha-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(an);an.click();an.remove()}catch(x){}return}
+ else if(a==="backup"){try{var bl=new Blob([JSON.stringify({room:room,date:new Date().toISOString(),data:(function(){var c=JSON.parse(JSON.stringify(D));c.ind={};return c})()},null,1)],{type:"application/json"}),an=document.createElement("a");an.href=URL.createObjectURL(bl);an.download="tourdebeer-zaloha-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(an);an.click();an.remove()}catch(x){}return}
  else if(a==="lock"){if(!isAdmin())return;var le=b.dataset.e;o["ed/"+le+"/lock"]=D.ed[le].lock?null:true;armed=null}
  else if(a==="setpin"){var pv3=document.getElementById("apn").value.trim();if(pv3.length<4){amsg="Zadaj aspoň 4 znaky.";render();return}if(D.meta.apin)return;var hp=hpin(pv3);o["meta/apin"]=hp;LS.s("adm",hp);amsg=""}
  else if(a==="admin"){var pv4=document.getElementById("apn").value.trim();if(hpin(pv4)===D.meta.apin){LS.s("adm",D.meta.apin);amsg=""}else amsg="Nesprávny PIN.";render();return}
@@ -587,6 +600,9 @@ document.addEventListener("click",function(e){
  else if(a==="savepos"){if(!tmpPos)return;o["pubs/"+id+"/lat"]=tmpPos[0];o["pubs/"+id+"/lng"]=tmpPos[1];o["pubs/"+id+"/geo"]="set";pickPub=null}
  else if(a==="geoone"){geoOne(id);return}
  else if(a==="geoall"){geoAll();return}
+ else if(a==="ibuy"){var it2=D.items[b.dataset.i];if(!it2)return;o["ind/"+DEV+"/orders/"+uid()]={name:it2.name,price:it2.price,t:now};armed=null}
+ else if(a==="iundo"){var ik=byT(((D.ind[DEV]||{}).orders)||{});if(!ik.length)return;o["ind/"+DEV+"/orders/"+ik[ik.length-1]]=null;armed=null}
+ else if(a==="ipaid"){if(armed==="ipaid"){o["ind/"+DEV+"/orders"]=null;armed=null}else{armed="ipaid";render();return}}
  else if(a==="oth"){openO[id]=!openO[id];render();return}
  else if(a==="ed"){eid=id;armed=null;render();return}
  else if(a==="sc"){stsc=id;render();return}
