@@ -48,7 +48,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .nm{font-weight:700;font-size:18px}.tot{font-size:21px;font-weight:800}.tot.z{color:var(--mute)}
 .pb{padding:0 14px 14px;border-top:1px solid var(--line)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.grid button{text-align:left;padding:10px 12px}
-.grid small{display:block;color:var(--mute)}.grid .l{border-color:rgba(255,255,255,.65)}
+.grid small{display:block;color:var(--mute)}.grid button{border-color:rgba(255,255,255,.65)}
 .gh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px 4px}
 .rt{display:flex;flex-wrap:wrap;align-items:center;padding:4px 14px 0}.p .rt:last-child{padding-bottom:6px}
 .rl{flex:1;font-weight:600}.rv{font-size:13px;color:var(--mute)}
@@ -67,7 +67,7 @@ nav .orb svg{width:34px;height:34px}
 .logo{margin:30px 0 0;border-radius:18px;overflow:hidden;background:#e9e2db}.logo img{display:block;width:100%;height:auto}.logo+.head{padding-top:14px}
 .hl{display:flex;justify-content:space-between;align-items:center;gap:8px}.mascot{width:112px;height:auto;flex:0 0 auto}.tag{margin-top:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
 .stars button:disabled{opacity:1;cursor:default}.stars button.on:disabled{color:var(--gold)}select:disabled{opacity:.7}
-.dim{color:var(--mute)!important}.nm.dim{opacity:.85}.tapc{margin:0!important}.mini{font-size:12px;color:var(--mute);margin:0 0 0 auto!important;gap:6px}.mini input{width:16px!important;height:16px!important}select.dim{color:var(--mute)}.li .chk input{margin:0}.chk{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--ink)}.chk input{flex:0 0 auto;width:22px;height:22px;padding:0;accent-color:var(--acc)}
+.dim{color:var(--mute)!important}.nm.dim{opacity:.85}.tapc{margin:0!important}.sumt{width:100%;border-collapse:collapse;font-size:14px}.sumt th{text-align:left;color:var(--mute);font-weight:600;font-size:12px;padding:2px 0 6px}.sumt td{padding:7px 0;border-top:1px solid var(--line)}.sumt th:nth-child(2),.sumt td:nth-child(2){text-align:center}.sumt th:last-child,.sumt td:last-child{text-align:right}.sumt tr.tt td{font-weight:700;color:var(--acc)}.mini{font-size:12px;color:var(--mute);margin:0 0 0 auto!important;gap:6px}.mini input{width:16px!important;height:16px!important}select.dim{color:var(--mute)}.li .chk input{margin:0}.chk{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--ink)}.chk input{flex:0 0 auto;width:22px;height:22px;padding:0;accent-color:var(--acc)}
 .rm{padding:0 14px}.rmh{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:14px;margin:5px 0 4px}.rmh small{font-weight:400;font-size:12px;color:var(--mute)}
 .meter{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.meter button{padding:5px 0;font-size:14px;font-weight:700;border:0;border-radius:9px;background:#244538;color:#fff}
 .meter button:disabled{opacity:1;cursor:default}.meter .g1.on{background:#17a74a}.meter .g2.on{background:#74b62b}.meter .g3.on{background:#e3b422;color:#1b1400}.meter .g4.on{background:#e8832b}.meter .g5.on{background:#d9412f}
@@ -107,14 +107,14 @@ if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
 function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{},ind:{}}}
-var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,seeded4=false,seeded5=false,seeded6=false,seeded7=false,seeded8=false,seeded9=false,seeded10=false,seeded11=false,seeded12=false,amsg="",acsub=(function(){try{return localStorage.getItem("acsub")==="ind"?"ind":"grp"}catch(e){return "grp"}})(),open=null,armed=null,seeded=false,msg="";
+var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,seeded4=false,seeded5=false,seeded6=false,seeded7=false,seeded8=false,seeded9=false,seeded10=false,seeded11=false,seeded12=false,seeded13=false,amsg="",acsub=(function(){try{return localStorage.getItem("acsub")==="ind"?"ind":"grp"}catch(e){return "grp"}})(),open=null,armed=null,seeded=false,msg="";
 var app=document.getElementById("app");
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function eur(n){return n.toFixed(2).replace(".",",")+" €"}
 function uid(){return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function byT(o){return Object.keys(o||{}).sort(function(a,b){return (o[a].t||0)-(o[b].t||0)})}
-function total(pid){var o=D.orders[pid]||{};return Object.keys(o).reduce(function(a,k){return a+o[k].price},0)}
+function total(pid){var o=D.orders[pid]||{};return Object.keys(o).reduce(function(a,k){return a+op(o[k])},0)}
 function api(method,path,body){return fetch(db+"/rooms/"+room+path+".json",{method:method,body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error("http");return r.json()})}
 function status(){var e=document.getElementById("st");if(!e)return;e.className="chip "+(online?"on":"off");e.textContent="Miestnosť "+room+(online?": pripojené":": bez spojenia")}
 function loc(obj){Object.keys(obj).forEach(function(p){var a=p.split("/"),o=D;for(var i=0;i<a.length-1;i++){o=o[a[i]]=o[a[i]]||{}}var l=a[a.length-1];if(obj[p]===null)delete o[l];else o[l]=obj[p]})}
@@ -136,6 +136,7 @@ function poll(){
   if(n.meta.seed1&&n.meta.fix7&&!n.meta.fix8&&!seeded10){seeded10=true;W(fix8Obj(n));return}
   if(n.meta.seed1&&n.meta.fix8&&!n.meta.fix9&&!seeded11){seeded11=true;W(fix9Obj(n));return}
   if(n.meta.seed1&&n.meta.fix9&&!n.meta.fix10&&!seeded12){seeded12=true;W(fix10Obj(n));return}
+  if(n.meta.seed1&&n.meta.fix10&&!n.meta.fix11&&!seeded13){seeded13=true;W(fix11Obj(n));return}
   if(n.meta.seed1&&!seeded3&&Object.keys(n.pubs).length&&HIST.some(function(H){return !n.meta[H.flag]})){seeded3=true;W(histObj(n));return}
   if(j!==last){last=j;D=n;if(!busy())render()}
   status();
@@ -148,14 +149,15 @@ function accView(){
  return '<div class="head"><h1>Účet</h1><div class="chip" id="st"></div></div>'+seg("acsub",[["ind","Individuálny"],["grp","Skupinový"]],acsub)+(acsub==="ind"?indView():grpView());
 }
 function indView(){
- var o=(D.ind[DEV]||{}).orders||{},ks=byT(o),t=ks.reduce(function(a,k){return a+o[k].price},0),me=D.mem[DEV],cnt={};
+ var o=(D.ind[DEV]||{}).orders||{},ks=byT(o),t=ks.reduce(function(a,k){return a+op(o[k])},0),me=D.mem[DEV],cnt={};
  var h='<div class="card total"><span>'+(me?esc(me.name):"Môj účet")+'</span><b>'+eur(t)+'</b></div><div class="card"><div class="grid" style="margin-top:0">';
  byT(D.items).concat(Object.keys(D.items)).filter(function(v,i,a){return a.indexOf(v)===i}).forEach(function(i){var it=D.items[i];h+='<button data-a="ibuy" data-i="'+i+'" class="'+(isLiq(it)?"l":"")+'">'+esc(it.name)+'<small>'+eur(it.price)+'</small></button>'});
  h+='</div>';
- ks.forEach(function(k){cnt[o[k].name]=(cnt[o[k].name]||0)+1});
+ h+='<div class="log" style="margin:0 2px 6px">Ťuk pridá nápoj, dvojťuk jeden odpočíta.</div>';
+ ks.forEach(function(k){var nn=on(o[k]);cnt[nn]=(cnt[nn]||0)+1});
  var kk=Object.keys(cnt);if(kk.length){h+='<div class="log">';kk.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
  h+='<div class="row"><button data-a="iundo"'+(ks.length?'':' disabled')+'>Zrušiť posledné</button><button data-a="ipaid"'+(ks.length?'':' disabled')+'>'+(armed==="ipaid"?"Naozaj vynulovať?":"Zaplatil")+'</button></div></div>';
- return h+'<div class="log">Tento účet vidíš len ty. Ostatným sa nezobrazuje.</div>';
+ return h+'<div class="log">Tento účet vidíš len ty. Ostatným sa nezobrazuje.</div>'+sumTable([o]);
 }
 function grpView(){
  var ids=byT(D.people),all=ids.reduce(function(a,id){return a+total(id)},0);
@@ -171,7 +173,8 @@ function grpView(){
    h+='<div class="pb"><div class="grid">';
    byT(D.items).concat(Object.keys(D.items)).filter(function(v,i,a){return a.indexOf(v)===i}).forEach(function(i){var it=D.items[i];h+='<button data-a="buy" data-id="'+id+'" data-i="'+i+'" class="'+(isLiq(it)?"l":"")+'">'+esc(it.name)+'<small>'+eur(it.price)+'</small></button>'});
    h+='</div>';
-   var cnt={};ok.forEach(function(k){var n=ord[k].name;cnt[n]=(cnt[n]||0)+1});
+   h+='<div class="log" style="margin:0 2px 6px">Ťuk pridá nápoj, dvojťuk jeden odpočíta.</div>';
+   var cnt={};ok.forEach(function(k){var n=on(ord[k]);cnt[n]=(cnt[n]||0)+1});
    var kk=Object.keys(cnt);
    if(kk.length){h+='<div class="log">';kk.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
    h+='<div class="row"><button data-a="undo" data-id="'+id+'"'+(ok.length?'':' disabled')+'>Zrušiť posledné</button>';
@@ -181,6 +184,7 @@ function grpView(){
   h+='</div>';
  });
  if(ids.length)h+='<h2>Odpočítať rovným dielom</h2><div class="add"><input id="sp" data-enter inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>';
+ h+=sumTable(ids.map(function(id){return D.orders[id]||{}}));
  return h;
 }
 var AREAXY={"Bojnice":[48.7790,18.5830],"Bojnická cesta":[48.7765,18.6020],"Mesto":[48.7745,18.6240],"Necpaly":[48.7850,18.6420],"Sever":[48.7880,18.6260],"Sídlisko":[48.7720,18.6300],"Zábník":[48.7670,18.6210],"Zapotoky":[48.7800,18.6130]};
@@ -359,6 +363,38 @@ function exportMapJpg(){
  }).catch(function(){say("Export sa nepodaril.")});
 }
 function isLiq(it){return it.liq!=null?!!it.liq:(it.type==="l"||/\d\s*cl\b/i.test(it.name||""))}
+var tapT=null,tapKey="",tapAt=0,tapOid="",tapObj=null;
+function flushTap(){if(tapT){clearTimeout(tapT);tapT=null;var o=tapObj;tapObj=null;api("PATCH","",o).then(poll).catch(function(){online=false;status()})}}
+function quickBuy(kind,pid,itemId){
+ var it=D.items[itemId];if(!it)return;armed=null;
+ var base=kind==="i"?"ind/"+DEV+"/orders/":"orders/"+pid+"/",ord=kind==="i"?((D.ind[DEV]||{}).orders||{}):(D.orders[pid]||{}),key=kind+"|"+pid+"|"+itemId,now=Date.now();
+ if(tapT&&tapKey===key&&now-tapAt<350){
+  clearTimeout(tapT);tapT=null;tapObj=null;var o={};o[base+tapOid]=null;
+  var prev=byT(ord).filter(function(k){return k!==tapOid&&(ord[k].i?ord[k].i===itemId:ord[k].name===it.name)}).pop();if(prev)o[base+prev]=null;
+  tapKey="";W(o);return}
+ flushTap();
+ var oid=uid(),add={};add[base+oid]={i:itemId,name:it.name,price:it.price,t:now};
+ loc(add);last="";render();
+ tapKey=key;tapAt=now;tapOid=oid;tapObj=add;
+ tapT=setTimeout(function(){tapT=null;var o2=tapObj;tapObj=null;if(o2)api("PATCH","",o2).then(poll).catch(function(){online=false;status()})},320);
+}
+function op(x){return x.i&&D.items[x.i]?D.items[x.i].price:x.price}
+function on(x){return x.i&&D.items[x.i]?D.items[x.i].name:x.name}
+function sumTable(lists){
+ var rows={},keys=[],credit=0,cn=0,n=0,tot=0;
+ lists.forEach(function(ord){Object.keys(ord||{}).forEach(function(k){var x=ord[k],p=op(x);if(!x.i&&p<0){credit+=p;cn++;return}var key=x.i&&D.items[x.i]?x.i:"n:"+on(x);if(!rows[key]){rows[key]={name:on(x),n:0,s:0};keys.push(key)}rows[key].n++;rows[key].s+=p})});
+ if(!keys.length&&!cn)return"";
+ var ord2=byT(D.items);keys.sort(function(a,b){var x=ord2.indexOf(a),y=ord2.indexOf(b);return (x<0?999:x)-(y<0?999:y)});
+ var h='<h2>Súhrn</h2><div class="card"><table class="sumt"><thead><tr><th>Nápoj</th><th>Počet</th><th>Cena</th></tr></thead><tbody>';
+ keys.forEach(function(k){var r=rows[k];n+=r.n;tot+=r.s;h+='<tr><td>'+esc(r.name)+'</td><td>'+r.n+'×</td><td>'+eur(r.s)+'</td></tr>'});
+ if(cn){tot+=credit;h+='<tr><td>Odpočty</td><td>'+cn+'×</td><td>'+eur(credit)+'</td></tr>'}
+ return h+'<tr class="tt"><td>Spolu</td><td>'+n+'×</td><td>'+eur(tot)+'</td></tr></tbody></table></div>';
+}
+function fix11Obj(n){var o={"meta/fix11":true},ids={};Object.keys(n.items).forEach(function(k){ids[norm(n.items[k].name)]=k});
+ function tag(base,ord){Object.keys(ord||{}).forEach(function(k){var x=ord[k];if(x.i||x.price<0)return;var id=ids[norm(x.name)];if(id)o[base+k+"/i"]=id})}
+ Object.keys(n.orders).forEach(function(p){tag("orders/"+p+"/",n.orders[p])});
+ Object.keys(n.ind).forEach(function(p){tag("ind/"+p+"/orders/",(n.ind[p]||{}).orders)});
+ return o}
 function beerOff(pid,name){var P=D.pubs[pid];if(!P||!P.beers)return false;return Object.keys(P.beers).some(function(b){return P.beers[b].off&&norm(P.beers[b].name)===norm(name)})}
 function norm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
 function seedObj(pubs){var o={},have={},cnt={};Object.keys(pubs||{}).forEach(function(k){have[norm(pubs[k].name)]=1});
@@ -536,7 +572,7 @@ function pubsView(){
 function priceView(){
  var h='<div class="card"><div class="ct">Alkohol a ceny</div>';
  Object.keys(D.items).forEach(function(i){var it=D.items[i];
-  h+='<div class="pr"><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku">✕</button></div><label class="chk mini" style="margin:-2px 0 10px 2px"><input type="checkbox" data-f="liq" data-i="'+i+'"'+(isLiq(it)?' checked':'')+'> Tvrdý alkohol (biely rámik v Účte)</label>'});
+  h+='<div class="pr"><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku">✕</button></div>'});
  return h+'<div class="row"><button data-a="addi" data-t="b">+ Pivo</button><button data-a="addi" data-t="l">+ Tvrdé</button></div></div>';
 }
 function settingsView(){
@@ -567,6 +603,7 @@ document.addEventListener("input",function(e){var t=e.target;if(t.id==="mn"&&t.d
 document.addEventListener("click",function(e){
  var b=e.target.closest("[data-a]");if(!b)return;
  var a=b.dataset.a,id=b.dataset.id,now=Date.now(),o={};
+ if(a!=="buy"&&a!=="ibuy")flushTap();
  if((a==="geoone"||a==="geoall"||a==="pickpos"||a==="savepos"||a==="delpub"||a==="delmem")&&!isAdmin())return;
  if((a==="rate"||a==="unpick"||a==="pick")&&D.ed[b.dataset.e]&&D.ed[b.dataset.e].lock)return;
  if(a==="nav"){tab=b.dataset.t;armed=null;render();window.scrollTo(0,0);return}
@@ -580,7 +617,7 @@ document.addEventListener("click",function(e){
   else{try{navigator.clipboard.writeText(link);msg="copied";render();setTimeout(function(){msg="";render()},2000)}catch(x){}}return}
  if(a==="addp"){var mv=document.getElementById("np").value;if(!mv||!D.mem[mv])return;var nid=uid();o["people/"+nid]={name:D.mem[mv].name,mid:mv,t:now};open=nid;armed=null}
  else if(a==="tog"){open=open===id?null:id;armed=null;render();return}
- else if(a==="buy"){var it=D.items[b.dataset.i];if(!it)return;o["orders/"+id+"/"+uid()]={name:it.name,price:it.price,t:now};armed=null}
+ else if(a==="buy"){quickBuy("g",id,b.dataset.i);return}
  else if(a==="undo"){var ks=byT(D.orders[id]||{});if(!ks.length)return;o["orders/"+id+"/"+ks[ks.length-1]]=null;armed=null}
  else if(a==="paid"){if(armed==="paid"+id){o["orders/"+id]=null;armed=null}else{armed="paid"+id;render();return}}
  else if(a==="delp"){if(armed==="del"+id){o["people/"+id]=null;o["orders/"+id]=null;open=null;armed=null}else{armed="del"+id;render();return}}
@@ -601,7 +638,7 @@ document.addEventListener("click",function(e){
  else if(a==="savepos"){if(!tmpPos)return;o["pubs/"+id+"/lat"]=tmpPos[0];o["pubs/"+id+"/lng"]=tmpPos[1];o["pubs/"+id+"/geo"]="set";pickPub=null}
  else if(a==="geoone"){geoOne(id);return}
  else if(a==="geoall"){geoAll();return}
- else if(a==="ibuy"){var it2=D.items[b.dataset.i];if(!it2)return;o["ind/"+DEV+"/orders/"+uid()]={name:it2.name,price:it2.price,t:now};armed=null}
+ else if(a==="ibuy"){quickBuy("i","",b.dataset.i);return}
  else if(a==="iundo"){var ik=byT(((D.ind[DEV]||{}).orders)||{});if(!ik.length)return;o["ind/"+DEV+"/orders/"+ik[ik.length-1]]=null;armed=null}
  else if(a==="ipaid"){if(armed==="ipaid"){o["ind/"+DEV+"/orders"]=null;armed=null}else{armed="ipaid";render();return}}
  else if(a==="oth"){openO[id]=!openO[id];render();return}
