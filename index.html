@@ -186,6 +186,8 @@ function grpView(){
  });
  if(ids.length)h+='<h2>Odpočítať rovným dielom</h2><div class="add"><input id="sp" data-enter inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>'+splitChips();
  h+=sumTable(ids.map(function(id){return D.orders[id]||{}}));
+ var anyO=ids.some(function(id){return Object.keys(D.orders[id]||{}).length});
+ if(ids.length)h+='<div class="row" style="margin-top:14px"><button class="pri" data-a="paidall"'+(anyO?'':' disabled')+'>'+(armed==="paidall"?"Naozaj? Všetko zaplatené":"Zaplatené")+'</button></div>';
  return h;
 }
 var AREAXY={"Bojnice":[48.7790,18.5830],"Bojnická cesta":[48.7765,18.6020],"Mesto":[48.7745,18.6240],"Necpaly":[48.7850,18.6420],"Sever":[48.7880,18.6260],"Sídlisko":[48.7720,18.6300],"Zábník":[48.7670,18.6210],"Zapotoky":[48.7800,18.6130]};
@@ -683,6 +685,7 @@ document.addEventListener("click",function(e){
  else if(a==="ipaid"){if(armed==="ipaid"){var ar2=archObj("i",(D.ind[DEV]||{}).orders||{});if(ar2)o["hist/"+uid()]=ar2;o["ind/"+DEV+"/orders"]=null;armed=null}else{armed="ipaid";render();return}}
  else if(a==="delh"){var he=D.hist[id];if(!he||!(isAdmin()||he.o===DEV))return;if(armed==="dh"+id){o["hist/"+id]=null;armed=null}else{armed="dh"+id;render();return}}
  else if(a==="delsp"){Object.keys(D.orders).forEach(function(pp){Object.keys(D.orders[pp]||{}).forEach(function(kk){if(D.orders[pp][kk].sp===id)o["orders/"+pp+"/"+kk]=null})})}
+ else if(a==="paidall"){if(armed!=="paidall"){armed="paidall";render();return}var anyP=false;Object.keys(D.people).forEach(function(pp){var ar3=archObj("g",D.orders[pp]||{},D.people[pp].name,pp);if(ar3){anyP=true;o["hist/"+uid()]=ar3;o["orders/"+pp]=null}});armed=null;if(!anyP){render();return}}
  else if(a==="oth"){openO[id]=!openO[id];render();return}
  else if(a==="ed"){eid=id;armed=null;render();return}
  else if(a==="sc"){stsc=id;render();return}
