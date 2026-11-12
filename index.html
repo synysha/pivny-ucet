@@ -85,6 +85,7 @@ select{flex:1;min-width:0;font:inherit;color:var(--ink);background:rgba(0,0,0,.2
 .tb{width:100%;border-collapse:collapse;font-size:14px}.tb th{color:var(--mute);font-weight:600;font-size:12px;text-align:right;padding:6px 4px}.tb td{padding:9px 4px;border-top:1px solid var(--line);text-align:right;vertical-align:top}.tb th:first-child,.tb td:first-child{text-align:left}.tb td:first-child small{display:block;color:var(--mute);font-size:12px}.tb td b{color:var(--acc)}.seg button{font-size:15px}
 .qrbox{background:#fff;border-radius:16px;padding:10px;width:min(260px,100%);margin:14px auto 8px;box-sizing:border-box}.qrbox svg{display:block;width:100%;height:auto}
 .pin.stl span{width:15px;height:15px;font-size:9px;border-width:1px}
+.pgx{display:flex!important;align-items:center;justify-content:center;gap:2px}.pgx>*{flex:0 1 auto!important}.pgx #pgtx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pgn{width:46px;text-align:center;padding:5px 4px;font-weight:700;font-size:14px;border:1px solid var(--acc);border-radius:10px}
 </style>
 </head>
 <body>
@@ -224,7 +225,7 @@ function buildPicker(el){
  if(P.lat!=null)put({lat:P.lat,lng:P.lng});
  m.on("click",function(e){put(e.latlng)});pickInst=m;
 }
-function pgInd(){var el=document.getElementById("pgind");if(el)el.textContent=(pagerIdx+1)+" / "+pagerNames.length+" · "+pagerNames[pagerIdx]}
+function pgInd(){var n=document.getElementById("pgn");if(n){var tx=document.getElementById("pgtx");if(n.tagName==="INPUT")n.value=pagerIdx+1;else n.textContent=pagerIdx+1;if(tx)tx.textContent=" / "+pagerNames.length+" · "+pagerNames[pagerIdx];return}var el=document.getElementById("pgind");if(el)el.textContent=(pagerIdx+1)+" / "+pagerNames.length+" · "+pagerNames[pagerIdx]}
 function pgGo(i){var pg=document.getElementById("pager");if(!pg)return;i=Math.max(0,Math.min(i,pagerNames.length-1));pagerIdx=i;pgInd();pg.scrollTo({left:i*(pg.clientWidth+12),behavior:"smooth"})}
 function afterRender(){
  var pgr=document.getElementById("pager");
@@ -626,10 +627,9 @@ function tdbView(){
  if(!picked.length)h+='<div class="card empty">Vyber krčmy, ktoré sa budú hodnotiť. Zoznam krčiem spravuješ v Nastaveniach.</div>';
  if(picked.length){
   pagerIdx=Math.max(0,Math.min(pagerIdx,picked.length-1));pagerNames=picked.map(function(pid){return (D.pubs[pid]||{}).name||""});
-  h+='<div class="pgr"><button data-a="pgprev" aria-label="Predošlá krčma">‹</button><span id="pgind">'+(pagerIdx+1)+' / '+picked.length+' · '+esc(pagerNames[pagerIdx])+'</span><button data-a="pgnext" aria-label="Ďalšia krčma">›</button></div><div id="pager" class="pager">';
+  h+='<div class="pgr"><button data-a="pgprev" aria-label="Predošlá krčma">‹</button><span id="pgind" class="pgx">'+(E.lock?'<b id="pgn">'+(pagerIdx+1)+'</b>':'<input id="pgn" class="pgn" inputmode="numeric" data-f="ppos" data-e="'+e+'" value="'+(pagerIdx+1)+'" aria-label="Poradie krčmy v ročníku">')+'<span id="pgtx"> / '+picked.length+' · '+esc(pagerNames[pagerIdx])+'</span></span><button data-a="pgnext" aria-label="Ďalšia krčma">›</button></div><div id="pager" class="pager">';
   picked.forEach(function(pid){h+=pubRate(e,pid)});
   h+='</div>'}
- if(picked.length>1&&(!E.lock||isAdmin()))h+=orderCard(e,picked);
  if(picked.length){
   var votes={},myv=(E.miss||{})[w]||"";
   Object.keys(E.miss||{}).forEach(function(m){var pid=E.miss[m];if(D.mem[m]&&(E.pubs||{})[pid])votes[pid]=(votes[pid]||0)+1});
@@ -650,21 +650,33 @@ function profView(){
 }
 function exportPubs(){
  var xe=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},te=new TextEncoder();
- var ids=pubsAlpha(Object.keys(D.pubs)).filter(function(id){return !D.pubs[id].closed});
- var rows=[["Krčma","Oblasť","Čapované piva"]].concat(ids.map(function(id){var P=D.pubs[id];return [P.name,P.area||"",byT(P.beers||{}).filter(function(b){return !P.beers[b].off}).map(function(b){return P.beers[b].name}).join(", ")]}));
- var sd=rows.map(function(r,i){return '<row r="'+(i+1)+'">'+r.map(function(v,j){return '<c r="'+colL(j+1)+(i+1)+'" t="inlineStr" s="'+(i===0?1:(j===2?2:0))+'"><is><t xml:space="preserve">'+xe(v)+'</t></is></c>'}).join("")+'</row>'}).join("");
+ var ids=Object.keys(D.pubs).filter(function(id){return !D.pubs[id].closed}).sort(function(a,b){var x=D.pubs[a],y=D.pubs[b],xa=(x.area||"").trim(),ya=(y.area||"").trim();return (xa?0:1)-(ya?0:1)||xa.localeCompare(ya,"sk")||x.name.localeCompare(y.name,"sk")});
+ var rows=ids.map(function(id){var P=D.pubs[id];return{n:P.name.trim(),a:(P.area||"").trim(),b:byT(P.beers||{}).filter(function(k){return !P.beers[k].off}).map(function(k){return P.beers[k].name.trim()})}});
+ var nb=Math.max(4,rows.reduce(function(m,r){return Math.max(m,r.b.length)},0)),LC=3+nb,N=rows.length+1;
+ var KN={bojnice:"AEAEAE",bojnickacesta:"FFFF00",mesto:"FB8879",necpaly:"FFC000",sever:"C84300",sidlisko:"84E291",zabnik:"E59EDD",zapotocky:"A6CAEC",zapotocky2:"A6CAEC"},PAL=["F4B183","C5E0B3","BDD7EE","FFE699","D9B3E6","B4C7E7","F8CBAD","E2F0D9","FFD966","9DC3E6"],ac={},pi=0;
+ rows.forEach(function(r){if(!r.a||ac[r.a])return;var k=norm(r.a).replace(/[^a-z0-9]/g,""),kk=KN[k]||KN[k.replace(/y$/,"")];ac[r.a]=kk||PAL[pi++%PAL.length]});
+ var fills=[],borders=[],xfs=[],fcache={},bcache={},xcache={};
+ function fl(hex){if(!hex)return 0;if(fcache[hex]==null){fcache[hex]=fills.length+2;fills.push('<fill><patternFill patternType="solid"><fgColor rgb="FF'+hex+'"/><bgColor indexed="64"/></patternFill></fill>')}return fcache[hex]}
+ function bd(l,r,t,b){var k=[l,r,t,b].join();if(bcache[k]==null){bcache[k]=borders.length;var e=function(n,v){return v?'<'+n+' style="'+v+'"><color auto="1"/></'+n+'>':'<'+n+'/>'};borders.push('<border>'+e("left",l)+e("right",r)+e("top",t)+e("bottom",b)+'<diagonal/></border>')}return bcache[k]}
+ function xf(f,fi,bi,al){var k=[f,fi,bi,al].join();if(xcache[k]==null){xcache[k]=xfs.length;xfs.push('<xf numFmtId="0" fontId="'+f+'" fillId="'+fi+'" borderId="'+bi+'" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="'+(al==="c"?"center":"general")+'" vertical="center"/></xf>')}return xcache[k]}
+ function cell(r,c,v,f,fi,al){var l=c===1?"medium":"thin",rr=c===LC?"medium":"thin",t=r<=2?"medium":"thin",b=(r===1||r===N)?"medium":"thin";return '<c r="'+colL(c)+r+'" s="'+xf(f,fi,bd(l,rr,t,b),al)+'"'+(v===""||v==null?'/>':' t="inlineStr"><is><t xml:space="preserve">'+xe(v)+'</t></is></c>')}
+ var mx=function(arr,min,k,add){return Math.max(min,arr.reduce(function(m,x){return Math.max(m,String(x).length)},0)*k+add)};
+ var wB=mx(rows.map(function(r){return r.n}),17.2,1.1,2),wC=mx(rows.map(function(r){return r.a}),12.9,1.1,3),wD=mx([].concat.apply([],rows.map(function(r){return r.b})),12.8,1.05,2);
+ var sd='<row r="1" ht="26.4" customHeight="1">';for(var c=1;c<=LC;c++)sd+=cell(1,c,c===2?"Krčma":c===3?"Oblasť":c===4?"Pivo":"",1,0,"c");sd+='</row>';
+ rows.forEach(function(r,i){var rn=i+2;sd+='<row r="'+rn+'" ht="19.95" customHeight="1">';for(var c=1;c<=LC;c++){var v=c===2?r.n:c===3?r.a:c>=4?(r.b[c-4]||""):"";sd+=c===3?cell(rn,c,v,2,fl(ac[r.a]),"l"):cell(rn,c,v,0,0,"l")}sd+='</row>'});
  var H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n',NS='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',RN='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+ var styles=H+'<styleSheet '+NS+'><fonts count="3"><font><sz val="10"/><name val="Aptos Narrow"/><family val="2"/></font><font><b/><sz val="10"/><name val="Georgia"/><family val="1"/></font><font><i/><sz val="10"/><name val="Aptos Narrow"/><family val="2"/></font></fonts><fills count="'+(fills.length+2)+'"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'+fills.join("")+'</fills><borders count="'+borders.length+'">'+borders.join("")+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xfs.join("")+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+ var cols='<col min="1" max="1" width="3.89" customWidth="1"/><col min="2" max="2" width="'+wB.toFixed(2)+'" customWidth="1"/><col min="3" max="3" width="'+wC.toFixed(2)+'" customWidth="1"/><col min="4" max="'+LC+'" width="'+wD.toFixed(2)+'" customWidth="1"/>';
  var files=[
   ["[Content_Types].xml",te.encode(H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>')],
   ["_rels/.rels",te.encode(H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+RN+'/officeDocument" Target="xl/workbook.xml"/></Relationships>')],
   ["xl/workbook.xml",te.encode(H+'<workbook '+NS+' xmlns:r="'+RN+'"><sheets><sheet name="Krčmy" sheetId="1" r:id="rId1"/></sheets></workbook>')],
   ["xl/_rels/workbook.xml.rels",te.encode(H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+RN+'/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="'+RN+'/styles" Target="styles.xml"/></Relationships>')],
-  ["xl/styles.xml",te.encode(H+'<styleSheet '+NS+'><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>')],
-  ["xl/worksheets/sheet1.xml",te.encode(H+'<worksheet '+NS+'><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="24" customWidth="1"/><col min="3" max="3" width="60" customWidth="1"/></cols><sheetData>'+sd+'</sheetData><autoFilter ref="A1:C'+rows.length+'"/></worksheet>')]
+  ["xl/styles.xml",te.encode(styles)],
+  ["xl/worksheets/sheet1.xml",te.encode(H+'<worksheet '+NS+'><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:'+colL(LC)+N+'"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>'+cols+'</cols><sheetData>'+sd+'</sheetData><mergeCells count="1"><mergeCell ref="D1:'+colL(LC)+'1"/></mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>')]
  ];
  var blob=zipWrite(files),an=document.createElement("a");an.href=URL.createObjectURL(blob);an.download="TourDeBeer_krcmy.xlsx";document.body.appendChild(an);an.click();setTimeout(function(){an.remove();URL.revokeObjectURL(an.href)},3000);
 }
-function orderCard(e,ids){var h='<div class="card"><div class="ct">Poradie krčiem</div>';ids.forEach(function(pid,i){var P=D.pubs[pid]||{name:"(zmazaná krčma)"};h+='<div class="li"><span style="flex:1"><b>'+(i+1)+'.</b> '+esc(P.name)+'</span><button class="sm" data-a="pmv" data-e="'+e+'" data-id="'+pid+'" data-d="-1"'+(i?'':' disabled')+' aria-label="Posunúť vyššie">↑</button><button class="sm" data-a="pmv" data-e="'+e+'" data-id="'+pid+'" data-d="1"'+(i<ids.length-1?'':' disabled')+' aria-label="Posunúť nižšie">↓</button></div>'});return h+'</div>'}
 function pubsView(){
  var adm=isAdmin(),ids=pubsAlpha(Object.keys(D.pubs)),h='<div class="card"><div class="ct">Pridať krčmu</div><div class="pr"><input id="pn" placeholder="Názov krčmy" maxlength="40"><input id="pa" placeholder="Oblasť" maxlength="30"></div><div class="row"><button class="pri" data-a="addpub">Pridať krčmu</button></div></div>';
  h+='<div class="card"><div class="ct">Zoznam krčiem<span>'+ids.length+'</span></div>';
@@ -1597,7 +1609,9 @@ function syncUrl(){try{var q2="?r="+room+(db!==DB_URL?"&db="+encodeURIComponent(
 function render(){
  var ready=db&&room;if(ready)syncUrl();
  Array.prototype.forEach.call(document.querySelectorAll("nav [data-t]"),function(n){n.classList.toggle("on",n.dataset.t===tab)});
+ var chs=Array.prototype.map.call(document.querySelectorAll(".chips"),function(c){return c.scrollLeft});
  app.innerHTML=tab==="acc"?accView():tab==="set"?settingsView():!ready?noRoomView("TourDeBeer"):tdbView();
+ Array.prototype.forEach.call(document.querySelectorAll(".chips"),function(c,i){if(chs[i])c.scrollLeft=chs[i]});
  status();
  try{afterRender()}catch(e){}
 }
@@ -1662,7 +1676,6 @@ document.addEventListener("click",function(e){
  else if(a==="deled"){var de=b.dataset.e;if(armed==="ed"+de){o["ed/"+de]=null;o["rt/"+de]=null;eid="";armed=null}else{armed="ed"+de;render();return}}
  else if(a==="votetog"){if(!isAdmin())return;var vg=D.ed[b.dataset.e];if(!vg)return;o["ed/"+b.dataset.e+"/vo"]=vg.vo?null:true}
  else if(a==="votetop"){if(!isAdmin())return;var vt=D.ed[b.dataset.e];if(!vt)return;var VV={};Object.keys(vt.vote||{}).forEach(function(m){if(!D.mem[m])return;Object.keys(vt.vote[m]||{}).forEach(function(p){if(D.pubs[p]&&!D.pubs[p].closed)VV[p]=(VV[p]||0)+1})});var left=(vt.n||12)-Object.keys(vt.pubs||{}).length,tp=Object.keys(VV).filter(function(p){return !(vt.pubs||{})[p]}).sort(function(x,y){return VV[y]-VV[x]||D.pubs[x].name.localeCompare(D.pubs[y].name,"sk")}).slice(0,Math.max(0,left));tp.forEach(function(p,ix){var bb=D.pubs[p].beers?Object.keys(D.pubs[p].beers).filter(function(q){return !D.pubs[p].beers[q].off}):[];o["ed/"+b.dataset.e+"/pubs/"+p]={t:now+ix,beer:bb.length===1?D.pubs[p].beers[bb[0]].name:""}});if(!tp.length)return}
- else if(a==="pmv"){var me=b.dataset.e,Em=D.ed[me];if(!Em||(Em.lock&&!isAdmin()))return;var ord=byT(Em.pubs||{}),ix=ord.indexOf(b.dataset.id),nx=ix+parseInt(b.dataset.d,10);if(ix<0||nx<0||nx>=ord.length)return;var tmp=ord[ix];ord[ix]=ord[nx];ord[nx]=tmp;var base=Math.min.apply(null,ord.map(function(p){return Em.pubs[p].t||0}));ord.forEach(function(p,j){if((Em.pubs[p].t||0)!==base+j)o["ed/"+me+"/pubs/"+p+"/t"]=base+j});pagerIdx=nx}
  else if(a==="pick"){var pv=document.getElementById("psel").value;if(!pv)return;var pbs=D.pubs[pv]&&D.pubs[pv].beers?Object.keys(D.pubs[pv].beers).filter(function(bb){return !D.pubs[pv].beers[bb].off}):[];o["ed/"+b.dataset.e+"/pubs/"+pv]={t:now,beer:pbs.length===1?D.pubs[pv].beers[pbs[0]].name:""}}
  else if(a==="unpick"){var ue=b.dataset.e;if(armed==="up"+id){o["ed/"+ue+"/pubs/"+id]=null;o["rt/"+ue+"/"+id]=null;armed=null}else{armed="up"+id;render();return}}
  else if(a==="rate"){var w=who();if(!D.mem[w]){msg="name";render();return}var rv=parseInt(b.dataset.v,10),rr=((D.rt[b.dataset.e]||{})[id]||{})[b.dataset.k]||{};o["rt/"+b.dataset.e+"/"+id+"/"+b.dataset.k+"/"+w]=rr[w]===rv?null:rv}
@@ -1688,6 +1701,7 @@ document.addEventListener("change",function(e){
   if(sl==="beer")o2["ed/"+t.dataset.e+"/pubs/"+t.dataset.id+"/beer"]=t.value||null;
   else if(sl==="miss"){if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/miss/"+who()]=t.value||null}
   W(o2);return}
+ if(t.dataset.f==="ppos"){var pe=t.dataset.e,Ep=D.ed[pe];if(!Ep||Ep.lock){render();return}var ord=byT(Ep.pubs||{}),ix=pagerIdx,nv=parseInt(t.value,10);if(isNaN(nv)||!ord[ix]){render();return}nv=Math.max(1,Math.min(ord.length,nv))-1;if(nv===ix){render();return}ord.splice(nv,0,ord.splice(ix,1)[0]);var base=Math.min.apply(null,ord.map(function(p){return Ep.pubs[p].t||0}));ord.forEach(function(p,j){if((Ep.pubs[p].t||0)!==base+j)o2["ed/"+pe+"/pubs/"+p+"/t"]=base+j});pagerIdx=nv;W(o2);return}
  if(t.dataset.f==="vote"){var ve=D.ed[t.dataset.e];if(!ve||ve.lock){render();return}if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/vote/"+who()+"/"+t.dataset.id]=t.checked?true:null;W(o2);return}
  if(t.dataset.f==="en"){var cn=parseInt(t.value,10);if(cn>=1&&cn<=40){o2["ed/"+t.dataset.e+"/n"]=cn;W(o2)}else render();return}
  if(t.dataset.f==="bname"){var nv=t.value.trim(),pb=D.pubs[t.dataset.id],ob=pb&&pb.beers&&pb.beers[t.dataset.b];if(!nv||!ob){render();return}var old=ob.name;o2["pubs/"+t.dataset.id+"/beers/"+t.dataset.b+"/name"]=nv;Object.keys(D.ed).forEach(function(e){var sp=(D.ed[e].pubs||{})[t.dataset.id];if(sp&&norm(sp.beer||"")===norm(old))o2["ed/"+e+"/pubs/"+t.dataset.id+"/beer"]=nv});W(o2);return}
