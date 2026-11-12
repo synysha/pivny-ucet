@@ -612,9 +612,9 @@ function tdbView(){
  if(tsub==="stat")return h+statView();
  if(tsub==="map")return h+mapView();
  var all=edsSorted(),e=curE();
- h+='<div class="chips">'+all.map(function(id){return '<button data-a="ed" data-id="'+id+'" class="'+(id===e?"on":"")+'">'+esc(D.ed[id].year)+'</button>'}).join("")+'<button data-a="newed">+ Ročník</button></div>';
- if(newEd)h+='<div class="card"><div class="ct">Nový ročník</div><div class="pr"><input id="nno" inputmode="numeric" placeholder="Č. ročníka" value="'+nextNo()+'"><input id="ney" inputmode="numeric" placeholder="Rok" value="'+new Date().getFullYear()+'"><input id="nen" inputmode="numeric" placeholder="Počet krčiem" value="12"></div><div class="pr"><span class="rl">Dátum akcie</span><input id="ned" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div class="row"><button class="pri" data-a="mked">Vytvoriť</button><button data-a="newed">Zrušiť</button></div></div>';
- if(!e)return h+'<div class="card empty">Zatiaľ žiadny ročník. Vytvor ho tlačidlom + Ročník. Minulé ročníky môžeš doplniť spätne.</div>';
+ h+='<div class="chips"><button data-a="newed" class="'+(newEd?"on":"")+'" aria-label="Nový ročník">+</button>'+all.map(function(id){return '<button data-a="ed" data-id="'+id+'" class="'+(id===e&&!newEd?"on":"")+'">'+esc(D.ed[id].year)+'</button>'}).join("")+'</div>';
+ if(newEd)return h+'<div class="card"><div class="ct">Nový ročník</div><div class="pr"><input id="nno" inputmode="numeric" placeholder="Č. ročníka" value="'+nextNo()+'"><input id="ney" inputmode="numeric" placeholder="Rok" value="'+new Date().getFullYear()+'"><input id="nen" inputmode="numeric" placeholder="Počet krčiem" value="12"></div><div class="pr"><span class="rl">Dátum akcie</span><input id="ned" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div class="row"><button class="pri" data-a="mked">Vytvoriť</button><button data-a="newed">Zrušiť</button></div></div>';
+ if(!e)return h+'<div class="card empty">Zatiaľ žiadny ročník. Vytvor ho tlačidlom +. Minulé ročníky môžeš doplniť spätne.</div>';
  var E=D.ed[e],w=who(),picked=byT(E.pubs||{}),n=E.n||12;
  h+='<div class="log"><b>'+(E.no?E.no+". ročník":"Ročník")+'</b> · '+esc(E.year)+(E.date?' · '+esc(E.date):'')+(E.lock?' · 🔒 uzavretý':'')+'</div>';
  if(!D.mem[DEV])h+=nameCard();
@@ -1669,7 +1669,7 @@ document.addEventListener("click",function(e){
  else if(a==="pgprev"){pgGo(pagerIdx-1);return}
  else if(a==="pgnext"){pgGo(pagerIdx+1);return}
  else if(a==="oth"){openO[id]=!openO[id];render();return}
- else if(a==="ed"){eid=id;pagerIdx=0;armed=null;render();return}
+ else if(a==="ed"){eid=id;newEd=false;pagerIdx=0;armed=null;render();return}
  else if(a==="sc"){stsc=id;render();return}
  else if(a==="newed"){newEd=!newEd;render();return}
  else if(a==="mked"){var yr=document.getElementById("ney").value.trim(),cn=parseInt(document.getElementById("nen").value,10);if(!yr)return;var neid=uid();o["ed/"+neid]={year:yr,n:(cn>=1&&cn<=40)?cn:12,no:parseInt(document.getElementById("nno").value,10)||nextNo(),vo:true,t:now};var dv=document.getElementById("ned").value;if(dv){var dp=dv.split("-");o["ed/"+neid].date=parseInt(dp[2],10)+". "+parseInt(dp[1],10)+". "+dp[0]}eid=neid;newEd=false}
