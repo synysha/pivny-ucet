@@ -622,7 +622,6 @@ function tdbView(){
  if(!e)return h+'<div class="card empty">Zatiaľ žiadny ročník. Vytvor ho tlačidlom +. Minulé ročníky môžeš doplniť spätne.</div>';
  var E=D.ed[e],w=who(),picked=byT(E.pubs||{}),n=E.n||12;
  h+='<div class="log"><b>'+(E.no?E.no+". ročník":"Ročník")+'</b> · '+esc(E.year)+(E.date?' · '+esc(E.date):'')+(E.lock?' · 🔒 uzavretý':'')+'</div>';
- h+=photoCard(E,e);
  if(!D.mem[DEV])h+=nameCard();
  h+=voteCard(E,e);
  if(!E.lock){
@@ -642,6 +641,7 @@ function tdbView(){
   var vk=Object.keys(votes).sort(function(a,b){return votes[b]-votes[a]});
   h+='<h2>Miss krčmy</h2><div class="card"><div class="add"><select data-sel="miss" data-e="'+e+'"'+(E.lock?' disabled':'')+'><option value="">môj tip na Miss krčmy</option>'+picked.map(function(pid){return '<option value="'+pid+'"'+(pid===myv?" selected":"")+'>'+esc((D.pubs[pid]||{}).name||"?")+'</option>'}).join("")+'</select></div>'+((E.mt||missWin(E))?'<div class="log">Víťaz: <b>'+esc(E.mt||(D.pubs[missWin(E)]||{}).name||"?")+'</b></div>':'')+(vk.length?'<div class="log">'+vk.map(function(pid){return '<span>'+esc((D.pubs[pid]||{}).name||"?")+' '+votes[pid]+'</span>'}).join("")+'</div>':'<div class="log">Zatiaľ žiadne hlasy.</div>')+'</div>';
  }
+ h+=photoCard(E,e);
  if(isAdmin())h+='<div class="row"><button data-a="lock" data-e="'+e+'">'+(E.lock?"🔓 Odomknúť ročník":"🔒 Zamknúť ročník")+'</button>'+(E.lock?'':'<button class="danger" data-a="deled" data-e="'+e+'">'+(armed==="ed"+e?"Naozaj zmazať?":"Zmazať ročník")+'</button>')+'</div>';
  h+='<div class="row"><button data-a="exportx" data-e="'+e+'">Export do Excelu</button></div>'+(xMsg?'<div class="log danger">'+esc(xMsg)+'</div>':'');
  return h;
