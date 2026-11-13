@@ -1641,7 +1641,7 @@ function phUpload(inp){var e=inp.dataset.e,f=inp.files&&inp.files[0];inp.value="
  im.onerror=function(){URL.revokeObjectURL(url);phMsg="Obrázok sa nepodarilo načítať.";render()};im.src=url}
 function photoCard(E,e){var c=PH[e],adm=isAdmin(),inp='<input type="file" accept="image/*" id="phf" data-f="phf" data-e="'+e+'" hidden>',h='<div class="phc">';
  if(!E.ph){h+='<div class="row"><button data-a="phpick">📷 Pridať fotku ročníka</button></div>'+inp}
- else if(c&&c!=="l"){h+='<img class="phi'+(phBig?' big':'')+'" data-a="phbig" src="'+c.d+'" alt="Fotka ročníka">'+(adm?'<div class="row" style="margin-top:8px"><button data-a="phpick">Vymeniť fotku</button><button class="danger" data-a="phdel" data-e="'+e+'">'+(armed==="phd"+e?'Naozaj odstrániť?':'Odstrániť')+'</button></div>'+inp:'')}
+ else if(c&&c!=="l"){h+='<img class="phi'+(phBig?' big':'')+'" data-a="phbig" src="'+c.d+'" alt="Fotka ročníka">'+(adm&&!E.lock?'<div class="row" style="margin-top:8px"><button data-a="phpick">Vymeniť fotku</button><button class="danger" data-a="phdel" data-e="'+e+'">'+(armed==="phd"+e?'Naozaj odstrániť?':'Odstrániť')+'</button></div>'+inp:'')}
  else if(c===null){h+='<div class="log">Fotku sa nepodarilo načítať.</div>'}
  else h+='<div class="log">Načítavam fotku…</div>';
  if(phMsg)h+='<div class="log">'+esc(phMsg)+'</div>';
