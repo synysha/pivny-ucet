@@ -111,13 +111,19 @@ input,select{background:var(--surf);border:1px solid rgba(255,255,255,.1);border
 .total{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.03))}
 nav{background:rgba(13,13,15,.96);border-top:1px solid rgba(255,255,255,.1);align-items:center}
 nav .t,nav .mid{color:var(--mute);font-weight:500}
-nav .t.on,nav .mid.on{color:#fff;font-weight:600}
+nav .t.on,nav .mid.on{color:var(--acc);font-weight:600}
 nav .mid{margin-top:0;padding:6px 0}
 nav .orb{width:auto;height:auto;border:0;background:none;box-shadow:none;border-radius:0;color:inherit}
 nav .mid.on .orb{box-shadow:none}
 nav .orb svg{width:26px;height:26px}
 .kick{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 3px}
 .seg button{font-size:14px;padding:10px 2px}
+.mrow{gap:8px}.mrow>input:first-child{flex:1 1 auto;min-width:0}.mrow .mchk{flex:0 0 auto;width:22px;height:22px;padding:0;margin:0;accent-color:var(--acc)}.jab{flex:0 0 auto;padding:4px 12px;border-radius:99px;background:var(--accbg);color:var(--acc);font-weight:700;font-size:13px}
+.pr.ip{gap:4px}.pr.ip .n{flex:1 1 auto}.pr.ip .c{flex:0 0 58px}
+.pr.ip .lk{padding:3px 5px;font-size:10px;line-height:1;border-radius:8px}
+.pr.ip .ishl{display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:8px 7px;margin:-8px -3px;cursor:pointer}
+.pr.ip .ishow{width:11px;height:11px}
+.pr.ip .danger{padding:3px 6px;font-size:10px;line-height:1;border-radius:8px}
 </style>
 </head>
 <body>
@@ -680,8 +686,8 @@ function profView(){
  var adm=isAdmin(),me=D.mem[DEV],ms=Object.keys(D.mem).filter(function(k){return !D.mem[k].hidden}).sort(function(a,b){return (D.mem[a].inactive?1:0)-(D.mem[b].inactive?1:0)||(D.mem[a].t||0)-(D.mem[b].t||0)});
  var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" data-orig="'+esc(me?me.name:"")+'" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename"'+(me?' style="display:none"':'')+'>Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div></div>';
  h+=adminCard();
- h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>';
- ms.forEach(function(m){h+='<div class="li" style="flex-wrap:wrap"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno" style="flex:1 1 100%"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(m===DEV?'<span class="log" style="margin:0">Toto som ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'">To som ja</button>'+(adm?'<button class="danger sm" data-a="delmem" data-id="'+m+'">'+(armed==="dm"+m?"Naozaj?":"Zmazať")+'</button>':''))+(adm?'<label class="chk mini"><input type="checkbox" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+'> Už sa nezúčastňuje</label>':'')+'</div>'});
+ h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>'+(adm?'<div class="log">Zaškrtnuté políčko = už sa nezúčastňuje. ✕ účastníka zmaže.</div>':'');
+ ms.forEach(function(m){h+='<div class="li mrow"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(adm?'<input type="checkbox" class="mchk" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+' aria-label="Už sa nezúčastňuje" title="Už sa nezúčastňuje">':'')+(m===DEV?'<span class="jab">ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'" aria-label="To som ja">ja</button>')+(adm&&m!==DEV?'<button class="danger sm" data-a="delmem" data-id="'+m+'" aria-label="Zmazať účastníka">'+(armed==="dm"+m?"Naozaj?":"✕")+'</button>':'')+'</div>'});
  return h+'<div class="add" style="margin-top:10px"><input id="mn2" data-enter placeholder="Pridať účastníka bez apky" maxlength="30"><button class="pri" data-a="addmem">Pridať</button></div></div>';
 }
 function exportPubs(){
@@ -729,9 +735,9 @@ function pubsView(){
  return h+'</div>';
 }
 function priceView(){
- var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = položka sa zobrazuje v účte pod menami. Zámok: zamknutú položku nemožno zmazať ani jej zmeniť cenu, kým ju admin neodomkne.</div>';
+ var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = zobrazuje sa v účte. Zámok = cenu nemožno meniť ani položku zmazať, kým ju admin neodomkne.</div>';
  Object.keys(D.items).forEach(function(i){var it=D.items[i];
-  h+='<div class="pr"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"'+(it.lock?' disabled':'')+'><button class="lk" data-a="ilock" data-i="'+i+'" aria-label="'+(it.lock?'Cena zamknutá':'Zamknúť cenu')+'"'+(isAdmin()?'':' disabled')+'>'+(it.lock?'🔒':'🔓')+'</button><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku"'+(it.lock?' disabled':'')+'>✕</button></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
+  h+='<div class="pr ip"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"'+(it.lock?' disabled':'')+'><button class="lk" data-a="ilock" data-i="'+i+'" aria-label="'+(it.lock?'Cena zamknutá':'Zamknúť cenu')+'"'+(isAdmin()?'':' disabled')+'>'+(it.lock?'🔒':'🔓')+'</button><label class="ishl"><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"></label><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku"'+(it.lock?' disabled':'')+'>✕</button></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
  return h+'<div class="row"><button data-a="addi" data-t="b">+ Položka</button></div></div>';
 }
 function settingsView(){
