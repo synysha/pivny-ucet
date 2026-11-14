@@ -118,12 +118,26 @@ nav .mid.on .orb{box-shadow:none}
 nav .orb svg{width:26px;height:26px}
 .kick{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 3px}
 .seg button{font-size:14px;padding:10px 2px}
-.mrow{gap:8px}.mrow>input:first-child{flex:1 1 auto;min-width:0}.mrow .mchk{flex:0 0 auto;width:22px;height:22px;padding:0;margin:0;accent-color:var(--acc)}.jab{flex:0 0 auto;padding:4px 12px;border-radius:99px;background:var(--accbg);color:var(--acc);font-weight:700;font-size:13px}
-.pr.ip{gap:4px}.pr.ip .n{flex:1 1 auto}.pr.ip .c{flex:0 0 58px}
-.pr.ip .lk{padding:3px 5px;font-size:10px;line-height:1;border-radius:8px}
-.pr.ip .ishl{display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:8px 7px;margin:-8px -3px;cursor:pointer}
-.pr.ip .ishow{width:11px;height:11px}
-.pr.ip .danger{padding:3px 6px;font-size:10px;line-height:1;border-radius:8px}
+
+/* jednotné kompaktné riadky */
+.pr.ip,.li.mrow{display:flex;align-items:center;gap:6px;background:#1f1f23;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:5px 6px;margin:0 0 8px}
+.li.mrow{justify-content:flex-start}
+.pr.ip input[type=text],.pr.ip .n,.pr.ip .c,.mrow>input:first-child{background:none;border:0;border-radius:8px;padding:6px 6px;min-width:0}
+.pr.ip .n,.mrow>input:first-child{flex:1 1 auto}
+.pr.ip .c{flex:0 0 54px;text-align:right;border-left:1px solid rgba(255,255,255,.1);border-radius:0;padding-left:8px}
+.pr.ip .icb{background:none;border:0;padding:2px 4px}
+.pr.ip .lk,.pr.ip .danger,.pr.ip .ishl,.mrow .ishl,.mrow .danger,.mrow .sm.ja,.mrow .jab{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 6px;margin:0;border:0;border-radius:8px;background:rgba(255,255,255,.07);font-size:13px;line-height:1;cursor:pointer}
+.pr.ip .lk,.pr.ip .danger,.mrow .danger{padding:0;width:26px}
+.pr.ip .lk,.pr.ip .danger{color:var(--mute)}.pr.ip .lk.on{color:#fbbf24}
+.pr.ip .danger,.mrow .danger{color:var(--red)}.mrow .danger.arm{width:auto;padding:0 9px}
+.pr.ip button:disabled,.mrow button:disabled{opacity:.35}
+.mrow .jab{background:var(--accbg);color:var(--acc);font-weight:700;padding:0 11px}
+.mrow .sm.ja{color:#fff;font-weight:600;padding:0 11px}
+.pr.ip .ishl,.mrow .ishl{width:26px;padding:0}
+.pr.ip .ishow,.mrow .mchk{-webkit-appearance:none;appearance:none;flex:0 0 auto;width:16px;height:16px;margin:0;padding:0;border-radius:5px;border:1.5px solid #6b6b72;background:transparent;display:grid;place-content:center;cursor:pointer}
+.pr.ip .ishow:checked,.mrow .mchk:checked{background:var(--acc);border-color:var(--acc)}
+.pr.ip .ishow:checked::after,.mrow .mchk:checked::after{content:"";width:4px;height:8px;border:solid #000;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.mrow .mchk{margin:0}
 </style>
 </head>
 <body>
@@ -687,7 +701,7 @@ function profView(){
  var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" data-orig="'+esc(me?me.name:"")+'" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename"'+(me?' style="display:none"':'')+'>Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div></div>';
  h+=adminCard();
  h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>'+(adm?'<div class="log">Zaškrtnuté políčko = už sa nezúčastňuje. ✕ účastníka zmaže.</div>':'');
- ms.forEach(function(m){h+='<div class="li mrow"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(adm?'<input type="checkbox" class="mchk" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+' aria-label="Už sa nezúčastňuje" title="Už sa nezúčastňuje">':'')+(m===DEV?'<span class="jab">ja</span>':'<button class="sm" data-a="claim" data-id="'+m+'" aria-label="To som ja">ja</button>')+(adm&&m!==DEV?'<button class="danger sm" data-a="delmem" data-id="'+m+'" aria-label="Zmazať účastníka">'+(armed==="dm"+m?"Naozaj?":"✕")+'</button>':'')+'</div>'});
+ ms.forEach(function(m){h+='<div class="li mrow"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(adm?'<label class="ishl"><input type="checkbox" class="mchk" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+' aria-label="Už sa nezúčastňuje" title="Už sa nezúčastňuje"></label>':'')+(m===DEV?'<span class="jab">ja</span>':'<button class="sm ja" data-a="claim" data-id="'+m+'" aria-label="To som ja">ja</button>')+(adm&&m!==DEV?'<button class="danger sm'+(armed==="dm"+m?' arm':'')+'" data-a="delmem" data-id="'+m+'" aria-label="Zmazať účastníka">'+(armed==="dm"+m?"Naozaj?":XI)+'</button>':'')+'</div>'});
  return h+'<div class="add" style="margin-top:10px"><input id="mn2" data-enter placeholder="Pridať účastníka bez apky" maxlength="30"><button class="pri" data-a="addmem">Pridať</button></div></div>';
 }
 function exportPubs(){
@@ -734,10 +748,11 @@ function pubsView(){
  if(adm)h+='<div class="row" style="margin-top:12px"><button data-a="geoall">Nájsť polohy automaticky</button></div>'+(geoMsg?'<div class="log">'+esc(geoMsg)+'</div>':'');
  return h+'</div>';
 }
+var SVGA='viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"',LKC='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',LKO='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-1.9"/></svg>',XI='<svg '+SVGA+'><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function priceView(){
  var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = zobrazuje sa v účte. Zámok = cenu nemožno meniť ani položku zmazať, kým ju admin neodomkne.</div>';
  Object.keys(D.items).forEach(function(i){var it=D.items[i];
-  h+='<div class="pr ip"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"'+(it.lock?' disabled':'')+'><button class="lk" data-a="ilock" data-i="'+i+'" aria-label="'+(it.lock?'Cena zamknutá':'Zamknúť cenu')+'"'+(isAdmin()?'':' disabled')+'>'+(it.lock?'🔒':'🔓')+'</button><label class="ishl"><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"></label><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku"'+(it.lock?' disabled':'')+'>✕</button></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
+  h+='<div class="pr ip"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"'+(it.lock?' disabled':'')+'><button class="lk'+(it.lock?' on':'')+'" data-a="ilock" data-i="'+i+'" aria-label="'+(it.lock?'Cena zamknutá':'Zamknúť cenu')+'"'+(isAdmin()?'':' disabled')+'>'+(it.lock?LKC:LKO)+'</button><label class="ishl"><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"></label><button class="danger" data-a="deli" data-i="'+i+'" aria-label="Zmazať položku"'+(it.lock?' disabled':'')+'>'+XI+'</button></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
  return h+'<div class="row"><button data-a="addi" data-t="b">+ Položka</button></div></div>';
 }
 function settingsView(){
