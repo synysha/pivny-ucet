@@ -139,6 +139,19 @@ nav .orb svg{width:26px;height:26px}
 .pr.ip .ishow:checked::after,.mrow .mchk:checked::after{content:"";width:4px;height:8px;border:solid #000;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .mrow .mchk{margin:0}
 .pr.ip .cn{flex:1 1 auto;min-width:0;padding:5px 6px}.pr.ip .cn b{display:block;font-weight:600;line-height:1.25}.pr.ip .cn small{display:block;color:var(--mute);font-size:12px;line-height:1.3;margin-top:1px}.pr.ip .danger.arm{width:auto;padding:0 9px}
+.cbox{background:#1f1f23;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:4px 6px;margin:0 0 8px}
+.crow{display:flex;align-items:center;gap:6px}
+.cnb{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:0;border-radius:8px;color:#fff;text-align:left;font-size:16px;padding:9px 6px}
+.cnb b{font-weight:600}.cnb .chv{color:var(--mute);font-size:14px;flex:0 0 auto}
+.cx{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0;border:0;border-radius:8px;background:rgba(255,255,255,.07);color:var(--red);font-size:13px;line-height:1}
+.cx.arm{padding:0 9px}
+.cedit{display:flex;gap:8px;padding:2px 4px 8px;flex-wrap:wrap}
+.cedit label{flex:1 1 40%;font-size:12px;color:var(--mute);font-weight:600}
+.cedit label.cw{flex:1 1 100%}
+.cedit input{display:block;width:100%;margin-top:4px;font-size:16px;color:#fff;font-weight:400}
+.plist{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.plist button{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:6px 10px 6px 13px;font-size:14px;font-weight:500}
+.plist button svg{width:12px;height:12px;color:var(--red)}
 </style>
 </head>
 <body>
@@ -163,7 +176,7 @@ var room=clean(q.get("r")||LS.g("room"));
 if(q.get("db")&&q.get("r")){LS.s("db",db);LS.s("room",room)}
 var DEF={i1:{name:"Pivo 0,5 l",price:2,type:"b"},i2:{name:"Pivo 0,3 l",price:1.5,type:"b"},i3:{name:"Vodka 4 cl",price:2,type:"l"},i4:{name:"Rum 4 cl",price:2.5,type:"l"},i5:{name:"Borovička 4 cl",price:2,type:"l"},i6:{name:"Fernet 4 cl",price:2.5,type:"l"}};
 var DEV=LS.g("dev")||(function(){var v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);LS.s("dev",v);return v})();
-function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{},ind:{},hist:{},cans:{},cr:{}}}
+function emptyD(){return{items:{},people:{},orders:{},pubs:{},mem:{},ed:{},rt:{},meta:{},ind:{},hist:{},cans:{},cr:{},cs:{},cp:{},cv:{}}}
 var D=emptyD(),last="",online=false,tab="acc",tsub="rate",ssub="prof",stsc="all",eid="",as="",openO={},openP=null,newEd=false,seeded2=false,seeded3=false,seeded4=false,seeded5=false,seeded6=false,seeded7=false,seeded8=false,seeded9=false,seeded10=false,seeded11=false,seeded12=false,seeded13=false,seeded14=false,amsg="",acsub=(function(){try{return (function(v){return v==="ind"||v==="his"?v:"grp"})(localStorage.getItem("acsub"))}catch(e){return "grp"}})(),hsub="g",openH={},pagerIdx=0,pagerNames=[],pickIco=null,open=null,armed=null,seeded=false,msg="";
 var app=document.getElementById("app");
 function clean(v){return String(v||"").toLowerCase().replace(/[^a-z0-9_-]/g,"")}
@@ -181,7 +194,7 @@ function poll(){
  if(!db||!room)return Promise.resolve();
  return api("GET","").then(function(d){
   online=true;d=d||{};
-  var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},mem:d.mem||{},ed:d.ed||{},rt:d.rt||{},meta:d.meta||{},ind:d.ind||{},hist:d.hist||{},cans:d.cans||{},cr:d.cr||{}},j=JSON.stringify(n);
+  var n={items:d.items||{},people:d.people||{},orders:d.orders||{},pubs:d.pubs||{},mem:d.mem||{},ed:d.ed||{},rt:d.rt||{},meta:d.meta||{},ind:d.ind||{},hist:d.hist||{},cans:d.cans||{},cr:d.cr||{},cs:d.cs||{},cp:d.cp||{},cv:d.cv||{}},j=JSON.stringify(n);
   if(!Object.keys(n.items).length&&!seeded){seeded=true;W({items:DEF});return}
   if(!n.meta.seed1&&!seeded2){seeded2=true;W(seedObj(n.pubs));return}
   if(n.meta.seed1&&!n.meta.fix2&&!seeded4){seeded4=true;W(fixObj(n));return}
@@ -567,6 +580,7 @@ function histObj(n){var o={},pm={},mm={},np={};
 function mergeObj(n,f,t){var o={};
  Object.keys(n.rt).forEach(function(e){Object.keys(n.rt[e]).forEach(function(p){Object.keys(n.rt[e][p]).forEach(function(k){var r=n.rt[e][p][k];if(r&&r[f]!=null){if(r[t]==null)o["rt/"+e+"/"+p+"/"+k+"/"+t]=r[f];o["rt/"+e+"/"+p+"/"+k+"/"+f]=null}})})});
  Object.keys(n.ed).forEach(function(e){var m=n.ed[e].miss;if(m&&m[f]!=null){if(m[t]==null)o["ed/"+e+"/miss/"+t]=m[f];o["ed/"+e+"/miss/"+f]=null}});
+ Object.keys(n.cv||{}).forEach(function(c){var r=n.cv[c];if(r&&r[f]!=null){if(r[t]==null)o["cv/"+c+"/"+t]=r[f];o["cv/"+c+"/"+f]=null}});if(n.cp&&n.cp[f]){o["cp/"+t]=true;o["cp/"+f]=null}
  o["mem/"+f]=null;return o}
 function fix3Obj(n){var o={"meta/fix3":true},rn={"roman":"Roman M.","roman z.":"Roman Č.","backy":"Balky","balaznik":"Balky","tomas (ocko)":"Očko"},id={},taken={};
  Object.keys(n.mem).forEach(function(k){var t=rn[norm(n.mem[k].name)];if(t&&k.indexOf("hm")===0)id[k]=t;else taken[norm(n.mem[k].name)]=k});
@@ -664,9 +678,11 @@ function voteCard(E,e){
  if(adm)h+='<div class="row"><button class="pri" data-a="votecfm" data-e="'+e+'"'+(tot?'':' disabled')+'>'+(armed==="vc"+e?'Naozaj? Do ročníka pôjde top '+nmax:'Potvrdiť hlasovanie')+'</button></div>';
  return h+'</div>'}
 var CANDB=[["Zlatý Bažant 10° svetlé výčapné","Zlatý Bažant","Heineken Slovensko","Svetlé výčapné","10°","","500","Slovensko"],["Zlatý Bažant 12° svetlý ležiak","Zlatý Bažant","Heineken Slovensko","Svetlý ležiak","12°","4,7","500","Slovensko"],["Zlatý Bažant ´73","Zlatý Bažant","Heineken Slovensko","Svetlý ležiak","","","500","Slovensko"],["Zlatý Bažant tmavé výčapné","Zlatý Bažant","Heineken Slovensko","Tmavé výčapné","","","500","Slovensko"],["Corgoň 10° svetlé výčapné","Corgoň","Heineken Slovensko","Svetlé výčapné","10°","3,8","550","Slovensko"],["Corgoň 12° svetlý ležiak","Corgoň","Heineken Slovensko","Svetlý ležiak","12°","","550","Slovensko"],["Šariš Iskrivá 10°","Šariš","Plzeňský Prazdroj Slovensko","Svetlé výčapné","10°","","500","Slovensko"],["Šariš Žiarivá 12°","Šariš","Plzeňský Prazdroj Slovensko","Svetlý ležiak","12°","","500","Slovensko"],["Šariš tmavý ležiak","Šariš","Plzeňský Prazdroj Slovensko","Tmavý ležiak","","","500","Slovensko"],["Urpiner Classic 10°","Urpiner","Banskobystrický pivovar","Svetlé výčapné","10°","","500","Slovensko"],["Urpiner Premium 12°","Urpiner","Banskobystrický pivovar","Svetlý ležiak","12°","","500","Slovensko"],["Urpiner IPL 13°","Urpiner","Banskobystrický pivovar","India Pale Lager","13°","","500","Slovensko"],["Urpiner špeciálny ležiak 14°","Urpiner","Banskobystrický pivovar","Špeciálny svetlý ležiak","14°","","500","Slovensko"],["Urpiner Exclusive 16°","Urpiner","Banskobystrický pivovar","Špeciálny svetlý ležiak","16°","","500","Slovensko"],["Urpiner Dark 11°","Urpiner","Banskobystrický pivovar","Tmavý ležiak","11°","","500","Slovensko"],["Steiger 10° svetlé výčapné","Steiger","Pivovar Steiger","Svetlé výčapné","10°","","500","Slovensko"],["Steiger 12° svetlý ležiak","Steiger","Pivovar Steiger","Svetlý ležiak","12°","","500","Slovensko"],["Bradáč Slobodné pivo","Bradáč","Pivovar Bradáč","Svetlé pivo","","","500","Slovensko"],["Urpín 93 11°","Urpín","Pivovar Urpín","Svetlé výčapné/ležiak","11°","","500","Slovensko"],["Kelt 10° svetlé výčapné","Kelt","Heineken Slovensko","Svetlé výčapné","10°","","500","Slovensko"],["Smädný Mních konzumné svetlé","Smädný Mních","Plzeňský Prazdroj Slovensko","Svetlé konzumné","","","550","Slovensko"],["Rastinger konzumné svetlé","Rastinger","Rastinger","Svetlé konzumné","","","500","Slovensko"],["Rastinger špeciálny ležiak","Rastinger","Rastinger","Špeciálny ležiak","","","500","Slovensko"],["Krušovice Královský originál 10°","Krušovice","Heineken ČR","Svetlé výčapné","10°","","500","Česko"],["Krušovice Královský ležák 12°","Krušovice","Heineken ČR","Svetlý ležiak","12°","","500","Česko"],["Krušovice Bohém","Krušovice","Heineken ČR","Svetlý ležiak","","","500","Česko"],["Kozel 10° svetlé","Velkopopovický Kozel","Plzeňský Prazdroj","Svetlé výčapné","10°","","500","Česko"],["Kozel 11° svetlé","Velkopopovický Kozel","Plzeňský Prazdroj","Svetlý ležiak","11°","","500","Česko"],["Kozel 12° svetlé","Velkopopovický Kozel","Plzeňský Prazdroj","Svetlý ležiak","12°","","500","Česko"],["Budvar Výčepní svetlé","Budvar","Budějovický Budvar","Svetlé výčapné","","","500","Česko"],["Budvar Original svetlý ležiak","Budvar","Budějovický Budvar","Svetlý ležiak","","","500","Česko"],["Gambrinus Originál 10°","Gambrinus","Plzeňský Prazdroj","Svetlé výčapné","10°","4,3","500","Česko"],["Gambrinus Plná 12°","Gambrinus","Plzeňský Prazdroj","Svetlý ležiak","12°","","500","Česko"],["Radegast Rázná 10°","Radegast","Plzeňský Prazdroj","Svetlé výčapné","10°","","500","Česko"],["Radegast Ryze hořká 12°","Radegast","Plzeňský Prazdroj","Svetlý ležiak","12°","5,1","500","Česko"],["Radegast Ratar","Radegast","Plzeňský Prazdroj","Svetlý ležiak","","4,3","500","Česko"],["Staropramen Smíchov","Staropramen","Pivovary Staropramen","Svetlé výčapné","","4,0","500","Česko"],["Staropramen Jedenáctka 11°","Staropramen","Pivovary Staropramen","Svetlý ležiak","11°","","500","Česko"],["Staropramen Premium","Staropramen","Pivovary Staropramen","Svetlý ležiak","","","500","Česko"],["Starobrno 10°","Starobrno","Heineken ČR","Svetlé výčapné","10°","","500","Česko"],["Pilsner Urquell","Pilsner Urquell","Plzeňský Prazdroj","Svetlý ležiak","","","500","Česko"],["Svijanský Máz","Svijany","Pivovar Svijany","Svetlý ležiak","","","500","Česko"],["Ostravar Černá Barbora","Ostravar","Pivovary Staropramen","Tmavé pivo","","","500","Česko"],["Heineken svetlý ležiak","Heineken","Heineken","Svetlý ležiak","","","500","Holandsko"],["Stella Artois","Stella Artois","AB InBev","Svetlý ležiak","","","500","Belgicko"],["Tucher svetlé kvasinkové pšeničné","Tucher","Tucher Bräu","Pšeničné pivo","","","500","Nemecko"],["Volfas Engelman IPA","Volfas Engelman","Volfas Engelman","IPA","","","568","Litva"],["Volfas Engelman APA","Volfas Engelman","Volfas Engelman","APA","","","568","Litva"],["Volfas Engelman Baltic Porter","Volfas Engelman","Volfas Engelman","Baltic Porter","","","568","Litva"],["Harboe Premium Bear Xtra Strong","Harboe","Harboes Bryggeri","Silné svetlé pivo","","","500","Dánsko"],["Harboe Premium Bear IPA","Harboe","Harboes Bryggeri","IPA","","","500","Dánsko"],["Harboe Gold Premium Lager","Harboe","Harboes Bryggeri","Svetlý ležiak","","","500","Dánsko"],["Pragus svetlý ležiak","Pragus","Pragus","Svetlý ležiak","","","500","Česko"],["Unikát slovenský ležiak","Unikát","Unikát","Svetlý ležiak","","","500","Slovensko"],["ARGUS Original Pils 10°","Argus","Lidl – privátna značka","Svetlé výčapné","10°","4,8","500","Nemecko / značka Lidl"],["Budvar 10°","Budvar","Budějovický Budvar","Svetlé výčapné","10°","5,0","500","Česko"],["Bruncvík svetlé pivo","Bruncvík","Kaufland – privátna značka","Svetlé pivo","","3,9","500","Česko"]];
-function canFrom(r,t){var c={name:r[0],t:t},k=["","brand","brewery","type","plato","abv","vol","country"];for(var i=1;i<8;i++)if(r[i])c[k[i]]=String(r[i]);return c}
-function canInfo(c){return [c.brewery,c.type,c.plato,c.abv?c.abv+" %":"",c.vol?c.vol+" ml":"",c.country].filter(Boolean).join(" · ")}
+function canFrom(r,t){var c={name:r[0],t:t};if(r[6])c.vol=String(r[6]);if(r[5])c.abv=String(r[5]);return c}
+function canInfo(c){return [c.vol?c.vol+" ml":"",c.abv?c.abv+" %":""].filter(Boolean).join(" · ")}
 function cansAlpha(ids){return ids.sort(function(a,b){return D.cans[a].name.localeCompare(D.cans[b].name,"sk")})}
+var openC=null,crater="",CK=[["chut","Chuť"],["dizajn","Dizajn plechovky"],["tip","Tip"]];
+function cRater(){var ps=Object.keys(D.cp||{}).filter(function(m){return D.mem[m]});if(!ps.length)return"";if(crater&&D.cp[crater]&&D.mem[crater])return crater;return D.cp[DEV]&&D.mem[DEV]?DEV:ps[0]}
 function cansSet(){
  var adm=isAdmin(),ids=cansAlpha(Object.keys(D.cans)),have={};ids.forEach(function(i){have[norm(D.cans[i].name)]=1});
  var miss=CANDB.filter(function(r){return !have[norm(r[0])]}).length;
@@ -674,25 +690,34 @@ function cansSet(){
  if(miss)h+='<div class="row" style="margin-top:10px"><button data-a="canall">Pridať všetky z databázy ('+miss+')</button></div>';
  h+='</div><div class="card"><div class="ct">Plechovky<span>'+ids.length+'</span></div>';
  if(!ids.length)h+='<div class="log">Zatiaľ žiadne. Vyber z databázy alebo napíš vlastný názov.</div>';
- ids.forEach(function(i){var c=D.cans[i],inf=canInfo(c);h+='<div class="pr ip"><div class="cn"><b>'+esc(c.name)+'</b>'+(inf?'<small>'+esc(inf)+'</small>':'')+'</div>'+(adm?'<button class="danger'+(armed==="cd"+i?' arm':'')+'" data-a="candel" data-id="'+i+'" aria-label="Zmazať plechovku">'+(armed==="cd"+i?"Naozaj?":XI)+'</button>':'')+'</div>'});
+ else h+='<div class="log">Ťukni na plechovku a doplň objem a alkohol.</div>';
+ ids.forEach(function(i){var c=D.cans[i],op=openC===i;h+='<div class="cbox"><div class="crow"><button class="cnb" data-a="cano" data-id="'+i+'" aria-expanded="'+op+'"><b>'+esc(c.name)+'</b><span class="chv">'+(op?'⌃':'⌄')+'</span></button>'+(adm?'<button class="cx'+(armed==="cd"+i?' arm':'')+'" data-a="candel" data-id="'+i+'" aria-label="Zmazať plechovku">'+(armed==="cd"+i?"Naozaj?":XI)+'</button>':'')+'</div>';
+  if(op)h+='<div class="cedit"><label class="cw">Názov<input data-f="cname" data-id="'+i+'" value="'+esc(c.name)+'"></label><label>Objem (ml)<input data-f="cvol" data-id="'+i+'" inputmode="numeric" value="'+esc(c.vol||"")+'" placeholder="500"></label><label>Alkohol (%)<input data-f="cabv" data-id="'+i+'" inputmode="decimal" value="'+esc(c.abv||"")+'" placeholder="4,7"></label></div>';
+  h+='</div>'});
  return h+'</div>'}
-function canCard(e,i,lk){var c=D.cans[i],inf=canInfo(c),r=((D.cr[e]||{})[i])||{},v=vals(r),w=who(),own=D.mem[w]&&r[w]>=1&&r[w]<=5?Math.round(r[w]):0;
- var h='<div class="p"><div class="gh"><span class="nm">'+esc(c.name)+(inf?'<small class="ar">'+esc(inf)+'</small>':'')+'</span>'+(lk?'':'<button class="danger sm" data-a="cunpick" data-e="'+e+'" data-id="'+i+'">'+(armed==="cu"+e+i?"Naozaj?":"Odobrať")+'</button>')+'</div>';
- h+='<div class="rm"><div class="rmh"><span>Ako hodnotíš plechovku?</span><small>'+(v.length?'Ø '+f1(avgs(v))+' ('+v.length+')':'zatiaľ nič')+'</small></div><div class="meter">';
- for(var k=1;k<=5;k++)h+='<button data-a="crate" data-e="'+e+'" data-id="'+i+'" data-v="'+k+'" class="g'+k+(k===own?' on':'')+'" aria-label="Známka '+k+' z 5"'+(lk?' disabled':'')+'>'+k+'</button>';
- return h+'</div><div class="rmc'+(own?' g'+own+'t':' hint')+'">'+(own?GL[own]:(lk?'Ročník je uzavretý.':'Kliknutím vyberieš hodnotenie.'))+'</div></div></div>'}
+function cVals(i,k){return Object.keys(D.cp||{}).filter(function(m){return D.mem[m]}).map(function(m){return (((D.cv||{})[i]||{})[m]||{})[k]}).filter(function(v){return v>=1&&v<=5})}
+function canCard(i,rt){var c=D.cans[i],inf=canInfo(c),h='<div class="p"><div class="gh"><span class="nm">'+esc(c.name)+(inf?'<small class="ar">'+esc(inf)+'</small>':'')+'</span><button class="danger sm" data-a="cunpick" data-id="'+i+'">'+(armed==="cu"+i?"Naozaj?":"Odobrať")+'</button></div>';
+ CK.forEach(function(kk){var k=kk[0],v=cVals(i,k),own=rt&&((((D.cv||{})[i]||{})[rt]||{})[k])||0;own=own>=1&&own<=5?Math.round(own):0;
+  h+='<div class="rm"><div class="rmh"><span>'+kk[1]+'</span><small>'+(v.length?'Ø '+f1(avgs(v))+' ('+v.length+')':'zatiaľ nič')+'</small></div><div class="meter">';
+  for(var g=1;g<=5;g++)h+='<button data-a="crate" data-id="'+i+'" data-k="'+k+'" data-v="'+g+'" class="g'+g+(g===own?' on':'')+'" aria-label="Známka '+g+' z 5"'+(rt?'':' disabled')+'>'+g+'</button>';
+  h+='</div><div class="rmc'+(own?' g'+own+'t':' hint')+'">'+(own?GL[own]:(rt?'Kliknutím vyberieš hodnotenie.':'Najprv vyber účastníkov.'))+'</div></div>'});
+ return h+'</div>'}
 function cansTab(){
- var all=edsSorted(),e=curE(),h='<div class="chips">'+all.map(function(id){return '<button data-a="ed" data-id="'+id+'" class="'+(id===e?"on":"")+'">'+esc(D.ed[id].year)+'</button>'}).join("")+'</div>';
- if(!e)return h+'<div class="card empty">Najprv vytvor ročník v záložke Hodnotenie.</div>';
- var E=D.ed[e],lk=!!E.lock,sel=byT(E.cans||{}).filter(function(i){return D.cans[i]});
- h+='<div class="log"><b>'+(E.no?E.no+". ročník":"Ročník")+'</b> · '+esc(E.year)+(E.date?' · '+esc(E.date):'')+(lk?' · 🔒 uzavretý':'')+'</div>';
+ var h='';
  if(!D.mem[DEV])h+=nameCard();
  if(!Object.keys(D.cans).length)return h+'<div class="card empty">Zatiaľ nemáš žiadne plechovky. Pridaj ich v Nastaveniach, v časti Plechovky.</div>';
- if(!lk){var free=cansAlpha(Object.keys(D.cans).filter(function(i){return !(E.cans||{})[i]}));h+='<div class="card"><div class="ct">Vybrané plechovky<span>'+sel.length+'</span></div><div class="add"><select id="cpsel"><option value="">vyber plechovku</option>'+free.map(function(i){return '<option value="'+i+'">'+esc(D.cans[i].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cpick" data-e="'+e+'">Pridať</button></div></div>'}
+ var sel=byT(D.cs||{}).filter(function(i){return D.cans[i]}),parts=Object.keys(D.cp||{}).filter(function(m){return D.mem[m]}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")}),rt=cRater();
+ var fm=Object.keys(D.mem).filter(function(m){return !D.cp[m]&&!D.mem[m].hidden}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
+ h+='<div class="card"><div class="ct">Účastníci<span>'+parts.length+'</span></div><div class="add"><select id="cpm"><option value="">vyber účastníka</option>'+fm.map(function(m){return '<option value="'+m+'">'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cpadd">Pridať</button></div>';
+ if(parts.length)h+='<div class="plist">'+parts.map(function(m){return '<button data-a="cprem" data-id="'+m+'" aria-label="Odobrať účastníka">'+esc(D.mem[m].name)+XI+'</button>'}).join("")+'</div>';
+ if(parts.length>1)h+='<div class="rt" style="margin-top:12px"><span class="rl">Hodnotí</span><select data-sel="crater">'+parts.map(function(m){return '<option value="'+m+'"'+(m===rt?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select></div>';
+ h+='</div>';
+ var free=cansAlpha(Object.keys(D.cans).filter(function(i){return !(D.cs||{})[i]}));
+ h+='<div class="card"><div class="ct">Vybrané plechovky<span>'+sel.length+'</span></div><div class="add"><select id="cpsel"><option value="">vyber plechovku</option>'+free.map(function(i){return '<option value="'+i+'">'+esc(D.cans[i].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cpick">Pridať</button></div></div>';
  if(!sel.length)return h+'<div class="card empty">Zatiaľ nie sú vybrané žiadne plechovky na hodnotenie.</div>';
- sel.forEach(function(i){h+=canCard(e,i,lk)});
- var rk=sel.map(function(i){return{n:D.cans[i].name,v:vals(((D.cr[e]||{})[i])||{})}}).filter(function(x){return x.v.length}).sort(function(a,b){return avgs(a.v)-avgs(b.v)||b.v.length-a.v.length});
- if(rk.length){h+='<h2>Poradie plechoviek</h2><div class="card">';rk.forEach(function(x,j){h+='<div class="li"><span><b>'+(j+1)+'.</b> '+esc(x.n)+'</span><b>Ø '+f1(avgs(x.v))+' ('+x.v.length+')</b></div>'});h+='</div>'}
+ sel.forEach(function(i){h+=canCard(i,rt)});
+ var rk=sel.map(function(i){var ks=CK.map(function(kk){var v=cVals(i,kk[0]);return v.length?avgs(v):null});var ok=ks.filter(function(x){return x!=null});return{n:D.cans[i].name,ks:ks,a:ok.length?avgs(ok):null}}).filter(function(x){return x.a!=null}).sort(function(a,b){return a.a-b.a});
+ if(rk.length){h+='<h2>Poradie plechoviek</h2><div class="card">';rk.forEach(function(x,j){h+='<div class="li"><span><b>'+(j+1)+'.</b> '+esc(x.n)+'<small class="ar">'+CK.map(function(kk,q){return kk[1].split(" ")[0]+' '+(x.ks[q]==null?'–':f1(x.ks[q]))}).join(" · ")+'</small></span><b>Ø '+f1(x.a)+'</b></div>'});h+='</div>'}
  return h}
 function tdbView(){
  var h='<div class="head hl"><div><div class="kick">Krčmová túra</div><h1>TourDeBeer</h1><div class="chip" id="st"></div><div class="tag">Walk · Drink · Enjoy</div></div><img class="mascot" src="'+MASCOT+'" alt=""></div>'+seg("tsub",[["rate","Hodnotenie"],["stat","Štatistika"],["map","Mapa"],["cans","Plechovky"]],tsub);
@@ -1747,7 +1772,7 @@ document.addEventListener("click",function(e){
  var a=b.dataset.a,id=b.dataset.id,now=Date.now(),o={};
  if(a!=="buy"&&a!=="ibuy")flushTap();
  if((a==="geoone"||a==="geoall"||a==="pickpos"||a==="savepos"||a==="delpub"||a==="delmem")&&!isAdmin())return;
- if((a==="rate"||a==="unpick"||a==="pick"||a==="votecfm"||a==="crate"||a==="cpick"||a==="cunpick")&&D.ed[b.dataset.e]&&D.ed[b.dataset.e].lock)return;
+ if((a==="rate"||a==="unpick"||a==="pick"||a==="votecfm")&&D.ed[b.dataset.e]&&D.ed[b.dataset.e].lock)return;
  if(a==="nav"){tab=b.dataset.t;armed=null;render();window.scrollTo(0,0);return}
  if(a==="seg"){if(b.dataset.k==="tsub")tsub=b.dataset.v;else if(b.dataset.k==="acsub"){acsub=b.dataset.v;LS.s("acsub",acsub)}else if(b.dataset.k==="hsub")hsub=b.dataset.v;else ssub=b.dataset.v;armed=null;render();return}
  if(a==="conn"){var di=document.getElementById("dbi"),u=di?di.value.trim().replace(/\/+$/,""):db,r=clean(document.getElementById("roi").value);
@@ -1807,9 +1832,12 @@ document.addEventListener("click",function(e){
  else if(a==="canadd"){var cq=((document.getElementById("canq")||{}).value||"").trim();if(!cq)return;var nq=norm(cq),dbr=CANDB.filter(function(r){return norm(r[0])===nq})[0];if(Object.keys(D.cans).some(function(i){return norm(D.cans[i].name)===nq}))return;o["cans/"+uid()]=canFrom(dbr||[cq],now)}
  else if(a==="canall"){var hv={};Object.keys(D.cans).forEach(function(i){hv[norm(D.cans[i].name)]=1});CANDB.filter(function(r){return !hv[norm(r[0])]}).forEach(function(r,ix){o["cans/"+uid()]=canFrom(r,now+ix)})}
  else if(a==="candel"){if(!isAdmin())return;if(armed!=="cd"+id){armed="cd"+id;render();return}armed=null;o["cans/"+id]=null}
- else if(a==="cpick"){var cs=document.getElementById("cpsel"),cv=cs?cs.value:"";if(!cv||!D.cans[cv])return;o["ed/"+b.dataset.e+"/cans/"+cv]={t:now}}
- else if(a==="cunpick"){if(armed!=="cu"+b.dataset.e+id){armed="cu"+b.dataset.e+id;render();return}armed=null;o["ed/"+b.dataset.e+"/cans/"+id]=null}
- else if(a==="crate"){var cw=who();if(!D.mem[cw]){msg="name";render();return}var cvv=parseInt(b.dataset.v,10),crr=((D.cr[b.dataset.e]||{})[id])||{};o["cr/"+b.dataset.e+"/"+id+"/"+cw]=crr[cw]===cvv?null:cvv}
+ else if(a==="cano"){openC=openC===id?null:id;render();return}
+ else if(a==="cpadd"){var cm=document.getElementById("cpm"),cmv=cm?cm.value:"";if(!cmv||!D.mem[cmv])return;o["cp/"+cmv]=true}
+ else if(a==="cprem"){o["cp/"+id]=null}
+ else if(a==="cpick"){var cs=document.getElementById("cpsel"),cv=cs?cs.value:"";if(!cv||!D.cans[cv])return;o["cs/"+cv]={t:now}}
+ else if(a==="cunpick"){if(armed!=="cu"+id){armed="cu"+id;render();return}armed=null;o["cs/"+id]=null}
+ else if(a==="crate"){var crt=cRater();if(!crt)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv}
  else if(a==="pick"){var pv=document.getElementById("psel").value;if(!pv)return;var pbs=D.pubs[pv]&&D.pubs[pv].beers?Object.keys(D.pubs[pv].beers).filter(function(bb){return !D.pubs[pv].beers[bb].off}):[];o["ed/"+b.dataset.e+"/pubs/"+pv]={t:now,beer:pbs.length===1?D.pubs[pv].beers[pbs[0]].name:""}}
  else if(a==="unpick"){var ue=b.dataset.e;if(armed==="up"+id){o["ed/"+ue+"/pubs/"+id]=null;o["rt/"+ue+"/"+id]=null;armed=null}else{armed="up"+id;render();return}}
  else if(a==="rate"){var w=who();if(!D.mem[w]){msg="name";render();return}var rv=parseInt(b.dataset.v,10),rr=((D.rt[b.dataset.e]||{})[id]||{})[b.dataset.k]||{};o["rt/"+b.dataset.e+"/"+id+"/"+b.dataset.k+"/"+w]=rr[w]===rv?null:rv}
@@ -1830,10 +1858,15 @@ document.addEventListener("change",function(e){
  var t=e.target,sl=t.dataset.sel,o2={};
  if((sl==="beer"||sl==="miss"||t.dataset.f==="en")&&D.ed[t.dataset.e]&&D.ed[t.dataset.e].lock){render();return}
  if(sl){
+  if(sl==="crater"){crater=t.value;render();return}
   if(sl==="as"){as=t.value;render();return}
   if(sl==="merge"){var to=t.value,fr=t.dataset.m;if(!to||!D.mem[to]||!D.mem[fr]){render();return}if(!confirm("Zlúčiť „"+D.mem[fr].name+"“ do „"+D.mem[to].name+"“? Hodnotenia sa presunú a pôvodné meno zmizne.")){render();return}if(DEV===fr){DEV=to;LS.s("dev",to)}W(mergeObj(D,fr,to));return}
   if(sl==="beer")o2["ed/"+t.dataset.e+"/pubs/"+t.dataset.id+"/beer"]=t.value||null;
   else if(sl==="miss"){if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/miss/"+who()]=t.value||null}
+  W(o2);return}
+ if(t.dataset.f==="cname"||t.dataset.f==="cvol"||t.dataset.f==="cabv"){var cid=t.dataset.id,fv=t.value.trim();if(!D.cans[cid]){render();return}
+  if(t.dataset.f==="cname"){if(!fv){render();return}o2["cans/"+cid+"/name"]=fv}
+  else{var nn=fv.replace(",",".");if(fv&&isNaN(parseFloat(nn))){render();return}o2["cans/"+cid+"/"+(t.dataset.f==="cvol"?"vol":"abv")]=fv?(t.dataset.f==="cvol"?String(Math.round(parseFloat(nn))):String(parseFloat(nn)).replace(".",",")):null}
   W(o2);return}
  if(t.dataset.f==="phf"){phUpload(t);return}
  if(t.dataset.f==="ppos"){var pe=t.dataset.e,Ep=D.ed[pe];if(!Ep||Ep.lock){render();return}var ord=byT(Ep.pubs||{}),ix=pagerIdx,nv=parseInt(t.value,10);if(isNaN(nv)||!ord[ix]){render();return}nv=Math.max(1,Math.min(ord.length,nv))-1;if(nv===ix){render();return}ord.splice(nv,0,ord.splice(ix,1)[0]);var base=Math.min.apply(null,ord.map(function(p){return Ep.pubs[p].t||0}));ord.forEach(function(p,j){if((Ep.pubs[p].t||0)!==base+j)o2["ed/"+pe+"/pubs/"+p+"/t"]=base+j});pagerIdx=nv;W(o2);return}
