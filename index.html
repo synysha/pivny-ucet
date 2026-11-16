@@ -161,6 +161,8 @@ nav .orb svg{width:26px;height:26px}
 .sw:not(.open):not(.swing) .swa{visibility:hidden}
 .rt input.nn{width:96px;text-align:right}.tb td small{display:block;color:var(--mute);font-size:12px}
 .rm select{width:100%;margin-top:6px}
+.sw.lg{border-radius:16px}.sw.lg .swa{border-radius:0 16px 16px 0}.sw .swr>.p{margin:0}
+.cme{display:flex;gap:8px}.chipx{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:6px 12px;font-size:14px;font-weight:500;background:var(--card);border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -245,11 +247,11 @@ function grpView(){
  var used={};ids.forEach(function(id){used[norm(D.people[id].name)]=1});
  var avail=Object.keys(D.mem).filter(function(m){var nm=D.mem[m].name;return nm.charAt(0)!=="("&&!D.mem[m].hidden&&!D.mem[m].inactive&&!used[norm(nm)]}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
  h+='<div class="add"><select id="np"><option value="">vyber člena</option>'+avail.map(function(m){return '<option value="'+m+'">'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="addp">Pridať</button></div>'+(Object.keys(D.mem).length?'':'<div class="log">Najprv pridaj účastníkov v Nastaveniach, v časti Profil.</div>');
- if(ids.length>1)h+='<div class="log">Podrž meno a potiahni hore alebo dole pre zmenu poradia.</div>';
+ if(ids.length>1)h+='<div class="log">Podrž meno a potiahni hore alebo dole = poradie. Potiahni meno doľava = zmazať.</div>';
  if(!ids.length)h+='<div class="empty card">Zatiaľ nikto. Pridaj prvé meno a potom mu ťukaj nápoje.</div>';
  ids.forEach(function(id){
   var p=D.people[id],t=total(id),o=open===id,ord=D.orders[id]||{},ok=byT(ord);
-  h+='<div class="p" data-dg="ppl" data-did="'+id+'"><button class="ph" data-a="tog" data-drag="1" data-id="'+id+'" aria-expanded="'+o+'"><span class="nm">'+esc(p.name)+'</span><span class="tot'+(t?'':' z')+'">'+eur(t)+'</span></button>';
+  h+='<div class="sw lg" data-dg="ppl" data-did="'+id+'"><button class="swa" data-a="swdel" data-t="ppl" data-id="'+id+'">Zmazať</button><div class="swr"><div class="p"><button class="ph" data-a="tog" data-drag="1" data-id="'+id+'" aria-expanded="'+o+'"><span class="nm">'+esc(p.name)+'</span><span class="tot'+(t?'':' z')+'">'+eur(t)+'</span></button>';
   if(o){
    h+='<div class="pb"><div class="grid">';
    byT(D.items).concat(Object.keys(D.items)).filter(function(v,i,a){return a.indexOf(v)===i&&D.items[v]&&D.items[v].show!==false}).forEach(function(i){var it=D.items[i];h+=btnHtml("buy",' data-id="'+id+'"',it,i)});
@@ -260,9 +262,9 @@ function grpView(){
    if(kk.length){h+='<div class="log">';kk.forEach(function(n){h+='<span>'+cnt[n]+'× '+esc(n)+'</span>'});h+='</div>'}
    h+='<div class="row"><button data-a="undo" data-id="'+id+'"'+(ok.length?'':' disabled')+'>Zrušiť posledné</button>';
    h+='<button data-a="paid" data-id="'+id+'"'+(ok.length?'':' disabled')+'>'+(armed==="paid"+id?"Naozaj vynulovať?":"Zaplatil")+'</button>';
-   h+='<button class="danger" data-a="delp" data-id="'+id+'">'+(armed==="del"+id?"Naozaj?":"Zmazať")+'</button></div></div>';
+   h+='</div></div>';
   }
-  h+='</div>';
+  h+='</div></div></div>';
  });
  if(ids.length)h+='<h2>Odpočítať rovným dielom</h2><div class="add"><input id="sp" data-enter inputmode="decimal" placeholder="Suma v €" aria-label="Suma na odpočet"><button class="pri" data-a="split">Odpočítať</button></div><div class="log">Suma sa rozdelí medzi '+ids.length+' ľudí a odpočíta každému.</div>'+splitChips();
  h+=sumTable(ids.map(function(id){return D.orders[id]||{}}));
@@ -691,7 +693,7 @@ function canFrom(r,t){var c={name:r[0],t:t};if(r[6])c.vol=String(r[6]);if(r[5])c
 function canInfo(c){return [c.vol?c.vol+" ml":"",c.abv?c.abv+" %":""].filter(Boolean).join(" · ")}
 function cansAlpha(ids){return ids.sort(function(a,b){return D.cans[a].name.localeCompare(D.cans[b].name,"sk")})}
 var csub="rate",openC=null,crater="",CK=[["chut","Chuť"],["dizajn","Dizajn plechovky"],["tip","Tip"]];
-function cRater(){var ps=Object.keys(D.cp||{}).filter(function(m){return D.mem[m]});if(!ps.length)return"";if(crater&&D.cp[crater]&&D.mem[crater])return crater;return D.cp[DEV]&&D.mem[DEV]?DEV:ps[0]}
+function cRater(){var me=LS.g("cme");return me&&D.cp[me]&&D.mem[me]?me:""}
 function cansSet(){
  var adm=isAdmin(),ids=Object.keys(D.cans).sort(function(a,b){return (D.cans[a].t||0)-(D.cans[b].t||0)}),have={};ids.forEach(function(i){have[norm(D.cans[i].name)]=1});
  var miss=CANDB.filter(function(r){return !have[norm(r[0])]}).length;
@@ -721,26 +723,28 @@ function slotCard(k,rt,I){var sl="s"+k,lk=I.lk,ans=(D.ca||{})[sl],rev=lk&&ans&&D
 function cansRate(I){
  var cm=I.cm,lk=I.lk,n=I.n,parts=I.parts,rt=cRater(),h='';
  h+='<div class="card"><div class="ct">Plechovky'+(lk?'<span>🔒 zamknuté</span>':'')+'</div><div class="rt"><span class="rl">Počet plechoviek</span><input class="nn" inputmode="numeric" data-f="cmn" value="'+(n||"")+'" placeholder="napr. 5" aria-label="Počet plechoviek"'+(lk?' disabled':'')+'></div></div>';
- var fm=Object.keys(D.mem).filter(function(m){return !D.cp[m]&&!D.mem[m].hidden}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
- h+='<div class="card"><div class="ct">Účastníci<span>'+parts.length+'</span></div>'+(lk?'':'<div class="add"><select id="cpm"><option value="">vyber účastníka</option>'+fm.map(function(m){return '<option value="'+m+'">'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cpadd">Pridať</button></div>');
- if(parts.length)h+='<div class="plist">'+parts.map(function(m){return '<button data-a="cprem" data-id="'+m+'" aria-label="Odobrať účastníka"'+(lk?' disabled':'')+'>'+esc(D.mem[m].name)+(lk?'':XI)+'</button>'}).join("")+'</div>';
- if(parts.length>1)h+='<div class="rt" style="margin-top:12px"><span class="rl">Hodnotí</span><select data-sel="crater">'+parts.map(function(m){return '<option value="'+m+'"'+(m===rt?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select></div>';
+ var fm=Object.keys(D.mem).filter(function(m){return !D.cp[m]&&!D.mem[m].hidden&&!D.mem[m].inactive}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
+ h+='<div class="card"><div class="ct">Účastníci<span>'+parts.length+'</span></div>';
+ if(rt)h+='<div class="log">Hodnotíš ako <b>'+esc(D.mem[rt].name)+'</b>.'+(lk?'':' <button class="sm" data-a="cmeclr">Zmeniť</button>')+'</div>';
+ else if(lk)h+='<div class="log">Hodnotenie je zamknuté.</div>';
+ else h+='<div class="log">Vyber svoje meno a potvrď. Ostatní sa pripoja sami zo svojich telefónov.</div><div class="cme"><select id="cme" aria-label="Moje meno"><option value="">vyber svoje meno</option>'+fm.map(function(m){return '<option value="'+m+'"'+(m===DEV?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cmeok">Potvrdiť</button></div>';
+ if(parts.length)h+='<div class="plist">'+parts.map(function(m){return (I.adm&&!lk)?'<button data-a="cprem" data-id="'+m+'" aria-label="Odobrať účastníka">'+esc(D.mem[m].name)+XI+'</button>':'<span class="chipx">'+esc(D.mem[m].name)+'</span>'}).join("")+'</div>';
  h+='</div>';
  if(!n)return h+'<div class="card empty">Zadaj počet plechoviek, ktoré budete hodnotiť.</div>';
  var names=[];for(var k=1;k<=n;k++)names.push("Plechovka "+k);
  if(pagerNames.join("|")!==names.join("|"))pagerIdx=0;pagerNames=names;pagerIdx=Math.max(0,Math.min(pagerIdx,n-1));
  h+='<div class="pgr"><button data-a="pgprev" aria-label="Predošlá plechovka">‹</button><span id="pgind">'+(pagerIdx+1)+' / '+n+' · '+pagerNames[pagerIdx]+'</span><button data-a="pgnext" aria-label="Ďalšia plechovka">›</button></div><div id="pager" class="pager">';
  for(var q=1;q<=n;q++)h+=slotCard(q,rt,I);
- h+='</div>'+photoCard(cm,"cans");
+ h+='</div>';
  if(I.adm)h+='<div class="row"><button data-a="cmlock">'+(lk?"🔓 Odomknúť hodnotenie":"🔒 Zamknúť hodnotenie")+'</button></div>';
  h+='<div class="row"><button data-a="cexport">Export do Excelu</button></div>'+(xMsg?'<div class="log danger">'+esc(xMsg)+'</div>':'');
  return h}
-function cansRows(I){var rows=[];for(var k=1;k<=I.n;k++){var sl="s"+k,ch=cVals(sl,"chut"),dz=cVals(sl,"dizajn"),all=ch.concat(dz),ans=(D.ca||{})[sl];rows.push({k:k,name:ans&&D.cans[ans]?D.cans[ans].name:"",ch:ch.length?avgs(ch):null,dz:dz.length?avgs(dz):null,a:all.length?avgs(all):null,n:Math.max(ch.length,dz.length)})}return rows}
+function cansRows(I){var rows=[];for(var k=1;k<=I.n;k++){var sl="s"+k,ch=cVals(sl,"chut"),dz=cVals(sl,"dizajn"),all=ch.concat(dz),ans=(D.ca||{})[sl];rows.push({k:k,name:ans&&D.cans[ans]?D.cans[ans].name:"",abv:ans&&D.cans[ans]?(D.cans[ans].abv||""):"",ch:ch.length?avgs(ch):null,dz:dz.length?avgs(dz):null,a:all.length?avgs(all):null,n:Math.max(ch.length,dz.length)})}return rows}
 function cansTot(I){
  if(!I.n)return '<div class="card empty">Zatiaľ nie je zadaný počet plechoviek.</div>';
  var rows=cansRows(I),vis=I.lk||I.adm,pt=cPoints(I);
  rows.sort(function(a,b){if(a.a==null&&b.a==null)return a.k-b.k;if(a.a==null)return 1;if(b.a==null)return -1;return a.a-b.a||a.k-b.k});
- var h='<h2>Celkové hodnotenie plechoviek</h2><div class="card" style="overflow-x:auto"><table class="tb"><tr><th>Plechovka</th><th>Chuť</th><th>Dizajn</th><th>Ø</th></tr>'+rows.map(function(r){return '<tr><td>'+(vis&&r.name?esc(r.name)+'<small>Plechovka '+r.k+'</small>':'Plechovka '+r.k)+'</td><td>'+(r.ch==null?'–':f1(r.ch))+'</td><td>'+(r.dz==null?'–':f1(r.dz))+'</td><td>'+(r.a==null?'–':'<b>'+f1(r.a)+'</b>')+'</td></tr>'}).join("")+'</table></div>';
+ var h='<h2>Celkové hodnotenie plechoviek</h2><div class="card" style="overflow-x:auto"><table class="tb"><tr><th>Plechovka</th><th>Alk.</th><th>Chuť</th><th>Dizajn</th><th>Ø</th></tr>'+rows.map(function(r){return '<tr><td>'+(vis&&r.name?esc(r.name)+'<small>Plechovka '+r.k+'</small>':'Plechovka '+r.k)+'</td><td>'+(vis&&r.abv?esc(r.abv)+' %':'–')+'</td><td>'+(r.ch==null?'–':f1(r.ch))+'</td><td>'+(r.dz==null?'–':f1(r.dz))+'</td><td>'+(r.a==null?'–':'<b>'+f1(r.a)+'</b>')+'</td></tr>'}).join("")+'</table></div>';
  h+='<h2>Tipovanie</h2><div class="card" style="overflow-x:auto">';
  if(!pt.total)h+='<div class="log">Admin zatiaľ nezadal správne odpovede.</div>';
  else if(!vis)h+='<div class="log">Body sa zobrazia po zamknutí hodnotenia.</div>';
@@ -753,10 +757,10 @@ function cansTab(){
  return h+(csub==="tot"?cansTot(I):cansRate(I))}
 function exportCans(){
  var I=cInfo(),te=new TextEncoder(),xe=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},pt=cPoints(I),rows=cansRows(I);
- var s1=[["#","Správna plechovka","Chuť Ø","Dizajn Ø","Ø spolu"]].concat(rows.map(function(r){return [r.k,r.name,r.ch==null?"":Math.round(r.ch*100)/100,r.dz==null?"":Math.round(r.dz*100)/100,r.a==null?"":Math.round(r.a*100)/100]}));
+ var s1=[["#","Správna plechovka","Alkohol %","Chuť Ø","Dizajn Ø","Ø spolu"]].concat(rows.map(function(r){return [r.k,r.name,r.abv||"",r.ch==null?"":Math.round(r.ch*100)/100,r.dz==null?"":Math.round(r.dz*100)/100,r.a==null?"":Math.round(r.a*100)/100]}));
  var s2=[["Účastník","Body","Z"]].concat(I.parts.slice().sort(function(a,b){return pt.res[b]-pt.res[a]}).map(function(m){return [D.mem[m].name,pt.res[m],pt.total]}));
  var s3=[["Účastník","Plechovka","Chuť","Dizajn","Tip","Správne"]];I.parts.forEach(function(m){for(var k=1;k<=I.n;k++){var sl="s"+k,r=((D.cv||{})[sl]||{})[m]||{},g=(((D.ct||{})[sl])||{})[m],ans=(D.ca||{})[sl];s3.push([D.mem[m].name,"Plechovka "+k,r.chut||"",r.dizajn||"",g&&D.cans[g]?D.cans[g].name:"",ans&&D.cans[ans]?D.cans[ans].name:""])}});
- var sheets=[{n:"Plechovky",r:s1,w:[6,34,10,10,10]},{n:"Body",r:s2,w:[26,8,6]},{n:"Hodnotenia",r:s3,w:[24,16,8,8,30,30]}];
+ var sheets=[{n:"Plechovky",r:s1,w:[6,34,11,10,10,10]},{n:"Body",r:s2,w:[26,8,6]},{n:"Hodnotenia",r:s3,w:[24,16,8,8,30,30]}];
  var H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n',NS='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',RN='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
  var files=[["[Content_Types].xml",te.encode(H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map(function(x,i){return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}).join("")+'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>')],
   ["_rels/.rels",te.encode(H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+RN+'/officeDocument" Target="xl/workbook.xml"/></Relationships>')],
@@ -855,9 +859,9 @@ function pubsView(){
 }
 var SVGA='viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"',LKC='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',LKO='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-1.9"/></svg>',XI='<svg '+SVGA+'><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function priceView(){
- var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = zobrazuje sa v účte. Zámok = cenu nemožno meniť ani položku zmazať, kým ju admin neodomkne. Podrž položku a potiahni = poradie. Potiahni riadok doľava = zmazať.</div>';
+ var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = zobrazuje sa v účte. Podrž položku a potiahni = poradie. Potiahni riadok doľava = zmazať.</div>';
  Object.keys(D.items).sort(function(a,b){return (D.items[a].t||0)-(D.items[b].t||0)}).forEach(function(i){var it=D.items[i];
-  var inn='<div class="pr ip"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"'+(it.lock?' disabled':'')+'><button class="lk'+(it.lock?' on':'')+'" data-a="ilock" data-i="'+i+'" aria-label="'+(it.lock?'Cena zamknutá':'Zamknúť cenu')+'"'+(isAdmin()?'':' disabled')+'>'+(it.lock?LKC:LKO)+'</button><label class="ishl"><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"></label></div>';h+='<div class="sw" data-dg="item" data-did="'+i+'">'+(it.lock?'':'<button class="swa" data-a="swdel" data-t="item" data-id="'+i+'">Zmazať</button>')+'<div class="swr">'+inn+'</div></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
+  var inn='<div class="pr ip"><button class="icb" data-a="icopick" data-i="'+i+'" aria-label="Ikonka"><span class="ib">'+icoFor(it)+'</span></button><input class="n" data-f="name" data-i="'+i+'" value="'+esc(it.name)+'" aria-label="Názov"><input class="c" inputmode="decimal" data-f="price" data-i="'+i+'" value="'+String(it.price).replace(".",",")+'" aria-label="Cena v eurách"><label class="ishl"><input type="checkbox" class="ishow" data-f="ishow" data-i="'+i+'"'+(it.show===false?'':' checked')+' aria-label="Zobrazovať v účte"></label></div>';h+='<div class="sw" data-dg="item" data-did="'+i+'">'+'<button class="swa" data-a="swdel" data-t="item" data-id="'+i+'">Zmazať</button>'+'<div class="swr">'+inn+'</div></div>'+(pickIco===i?'<div class="icp">'+ICN.map(function(k){return '<button data-a="icoset" data-i="'+i+'" data-k="'+k+'" class="'+(it.ic===k?"on":"")+'" aria-label="'+k+'"><span class="ib">'+IC[k]+'</span></button>'}).join("")+'<button class="sm" data-a="icoset" data-i="'+i+'" data-k="">Auto</button></div>':'')});
  return h+'<div class="row"><button data-a="addi" data-t="b">+ Položka</button></div></div>';
 }
 function settingsView(){
@@ -1892,11 +1896,13 @@ document.addEventListener("click",function(e){
  else if(a==="canall"){var hv={};Object.keys(D.cans).forEach(function(i){hv[norm(D.cans[i].name)]=1});CANDB.filter(function(r){return !hv[norm(r[0])]}).forEach(function(r,ix){o["cans/"+uid()]=canFrom(r,now+ix)})}
  else if(a==="candel"){if(!isAdmin())return;if(armed!=="cd"+id){armed="cd"+id;render();return}armed=null;o["cans/"+id]=null}
  else if(a==="cano"){openC=openC===id?null:id;render();return}
- else if(a==="cpadd"){if((D.cm||{}).lock)return;var cm0=document.getElementById("cpm"),cmv=cm0?cm0.value:"";if(!cmv||!D.mem[cmv])return;o["cp/"+cmv]=true}
- else if(a==="cprem"){if((D.cm||{}).lock)return;o["cp/"+id]=null}
+ else if(a==="cmeok"){if((D.cm||{}).lock)return;var cm0=document.getElementById("cme"),cmv=cm0?cm0.value:"";if(!cmv||!D.mem[cmv]||D.cp[cmv])return;LS.s("cme",cmv);o["cp/"+cmv]=true}
+ else if(a==="cmeclr"){if((D.cm||{}).lock)return;var me0=LS.g("cme");LS.s("cme","");if(!me0){render();return}o["cp/"+me0]=null}
+ else if(a==="cprem"){if((D.cm||{}).lock||!isAdmin())return;if(LS.g("cme")===id)LS.s("cme","");o["cp/"+id]=null}
  else if(a==="crate"){var crt=cRater();if(!crt||(D.cm||{}).lock)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv}
  else if(a==="cmlock"){if(!isAdmin())return;o["cm/lock"]=(D.cm||{}).lock?null:true}
  else if(a==="cexport"){try{exportCans();xMsg=""}catch(x){xMsg="Export sa nepodaril: "+x.message}render();return}
+ else if(a==="swdel"){var sty=b.dataset.t;if(sty==="mem"){if(!isAdmin())return;o["mem/"+id]=null}else if(sty==="item"){if(!D.items[id])return;o["items/"+id]=null}else if(sty==="can"){if(!isAdmin())return;o["cans/"+id]=null}else if(sty==="beer"){o["pubs/"+b.dataset.p+"/beers/"+id]=null}else if(sty==="ppl"){o["people/"+id]=null;o["orders/"+id]=null;if(open===id)open=null}else return}
  else if(a==="pick"){var pv=document.getElementById("psel").value;if(!pv)return;var pbs=D.pubs[pv]&&D.pubs[pv].beers?Object.keys(D.pubs[pv].beers).filter(function(bb){return !D.pubs[pv].beers[bb].off}):[];o["ed/"+b.dataset.e+"/pubs/"+pv]={t:now,beer:pbs.length===1?D.pubs[pv].beers[pbs[0]].name:""}}
  else if(a==="unpick"){var ue=b.dataset.e;if(armed==="up"+id){o["ed/"+ue+"/pubs/"+id]=null;o["rt/"+ue+"/"+id]=null;armed=null}else{armed="up"+id;render();return}}
  else if(a==="rate"){var w=who();if(!D.mem[w]){msg="name";render();return}var rv=parseInt(b.dataset.v,10),rr=((D.rt[b.dataset.e]||{})[id]||{})[b.dataset.k]||{};o["rt/"+b.dataset.e+"/"+id+"/"+b.dataset.k+"/"+w]=rr[w]===rv?null:rv}
@@ -1945,7 +1951,7 @@ document.addEventListener("change",function(e){
  if(t.dataset.f==="ishow"&&D.items[t.dataset.i]){o2["items/"+t.dataset.i+"/show"]=t.checked?null:false;W(o2);return}
  var f=e.target.dataset.f,i=e.target.dataset.i;if(!f||!D.items[i])return;var o={};
  if(f==="name"){var n=e.target.value.trim();if(!n)return;o["items/"+i+"/name"]=n}
- else{if(D.items[i].lock){render();return}var v=parseFloat(e.target.value.replace(",","."));if(isNaN(v)||v<0)return;o["items/"+i+"/price"]=v}
+ else{var v=parseFloat(e.target.value.replace(",","."));if(isNaN(v)||v<0)return;o["items/"+i+"/price"]=v}
  W(o);
 });
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("data-enter")){var r=e.target.closest(".add")||e.target.closest(".card"),b=r&&r.querySelector("button.pri");if(b)b.click()}});
