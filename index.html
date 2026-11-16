@@ -1759,6 +1759,21 @@ document.addEventListener("click",function(e){
  var r=e.target.closest&&e.target.closest(".mrow[data-m]");if(!r||e.target.closest("button,label,.swa"))return;
  var id=r.dataset.m,n=Date.now();if(lastTap.id===id&&n-lastTap.t<420){lastTap={id:"",t:0};try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(x){}DEV=id;LS.s("dev",id);as="";armed=null;render();return}lastTap={id:id,t:n}},true);
 document.addEventListener("contextmenu",function(e){if(DR&&DR.on)e.preventDefault()});
+var PH={},phMsg="",phBig=false;
+function phUrl(e){return db+"/photos/"+room+"/"+e+".json"}
+function phLoad(){if(tab!=="tdb"||tsub!=="rate")return;var e=curE(),E=D.ed[e];if(!E||!E.ph)return;var c=PH[e];if(c==="l"||c===null||(c&&c.t===E.ph))return;PH[e]="l";fetch(phUrl(e)).then(function(r){return r.json()}).then(function(v){PH[e]=v&&v.d?v:null;if(!busy())render()}).catch(function(){PH[e]=null;if(!busy())render()})}
+function phUpload(inp){var e=inp.dataset.e,f=inp.files&&inp.files[0];inp.value="";if(!f||!D.ed[e])return;
+ phMsg="Nahrávam fotku…";render();var url=URL.createObjectURL(f),im=new Image();
+ im.onload=function(){var M=1280,sc=Math.min(1,M/Math.max(im.width,im.height)),cv=document.createElement("canvas");cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(url);var d=cv.toDataURL("image/jpeg",.8),t=Date.now();
+  fetch(phUrl(e),{method:"PUT",body:JSON.stringify({d:d,t:t})}).then(function(r){if(!r.ok)throw new Error(r.status);PH[e]={d:d,t:t};phMsg="";var o={};o["ed/"+e+"/ph"]=t;W(o)}).catch(function(x){phMsg="Fotku sa nepodarilo uložiť ("+x.message+"). Skontroluj pravidlá databázy.";render()})};
+ im.onerror=function(){URL.revokeObjectURL(url);phMsg="Obrázok sa nepodarilo načítať.";render()};im.src=url}
+function photoCard(E,e){var c=PH[e],adm=isAdmin(),inp='<input type="file" accept="image/*" id="phf" data-f="phf" data-e="'+e+'" hidden>',h='<div class="phc">';
+ if(!E.ph){h+='<div class="row"><button data-a="phpick">📷 Pridať fotku ročníka</button></div>'+inp}
+ else if(c&&c!=="l"){h+='<img class="phi'+(phBig?' big':'')+'" data-a="phbig" src="'+c.d+'" alt="Fotka ročníka">'+(adm?'<div class="row" style="margin-top:8px"><button data-a="phpick">Vymeniť fotku</button><button class="danger" data-a="phdel" data-e="'+e+'">'+(armed==="phd"+e?'Naozaj odstrániť?':'Odstrániť')+'</button></div>'+inp:'')}
+ else if(c===null){h+='<div class="log">Fotku sa nepodarilo načítať.</div>'}
+ else h+='<div class="log">Načítavam fotku…</div>';
+ if(phMsg)h+='<div class="log">'+esc(phMsg)+'</div>';
+ return h+'</div>'}
 function render(){if(DR&&DR.on)return;swOpen=null;
  var ready=db&&room;if(ready)syncUrl();
  Array.prototype.forEach.call(document.querySelectorAll("nav [data-t]"),function(n){n.classList.toggle("on",n.dataset.t===tab)});
