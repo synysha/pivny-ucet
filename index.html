@@ -166,6 +166,7 @@ nav .orb svg{width:26px;height:26px}
 .cmerow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;width:100%;background:none;padding:2px 0}
 .tb.tight{table-layout:fixed;font-size:13px}.tb.tight th{font-size:11px;padding:6px 2px;white-space:nowrap}.tb.tight td{padding:10px 2px;white-space:nowrap;vertical-align:middle}
 .tb.tight td:first-child{overflow:hidden;text-overflow:ellipsis}.tb.tight .sn{display:inline-block;min-width:14px;margin-right:6px;color:var(--mute);font-size:12px}
+.sw.hs{border-radius:0;margin:0}.sw.hs .swr{background:#18181B}.sw.hs .swa{border-radius:0}.sw.hs .swr>.li.hl{margin:0}
 </style>
 </head>
 <body>
@@ -532,6 +533,7 @@ function dlab(t){var d=new Date(t);return d.getDate()+". "+(d.getMonth()+1)+". "
 function hisView(){
  var h=seg("hsub",[["g","Skupinový"],["i","Individuálny"]],hsub);
  var ids=Object.keys(D.hist).filter(function(k){var e=D.hist[k];return e.k===hsub&&(hsub==="g"||e.o===DEV)});
+ if(ids.length)h+='<div class="log">Potiahni záznam doľava = zmazať.</div>';
  if(!ids.length)return h+'<div class="card empty">Zatiaľ žiadna história. Účet sa sem uloží po stlačení Zaplatil.</div>';
  var days={};ids.forEach(function(k){var dk=dkey(D.hist[k].t0);(days[dk]=days[dk]||[]).push(k)});
  Object.keys(days).sort(function(a,b){return b-a}).forEach(function(dk){
@@ -539,7 +541,7 @@ function hisView(){
   h+='<div class="p"><button class="ph" data-a="hday" data-id="'+dk+'" aria-expanded="'+op2+'"><span class="nm">'+dlab(D.hist[list[0]].t0)+'</span><span class="tot">'+eur(sum)+'</span></button>';
   if(op2){h+='<div class="pb">';
    list.forEach(function(k){var e=D.hist[k],ln=Object.keys(e.lines||{}).sort(function(a,b){return a-b}).map(function(i){return e.lines[i].c+"× "+esc(e.lines[i].n)}).join(" · ");
-    h+='<div class="li hl"><div class="hn"><b>'+(hsub==="g"?esc(e.nm||"?"):"Môj účet")+'</b><small class="ar">'+ln+'</small></div><span class="tot2">'+eur(e.tot)+'</span>'+((isAdmin()||e.o===DEV)?'<button class="danger sm" data-a="delh" data-id="'+k+'">'+(armed==="dh"+k?"Naozaj?":"✕")+'</button>':'')+'</div>'});
+    var inn='<div class="li hl"><div class="hn"><b>'+(hsub==="g"?esc(e.nm||"?"):"Môj účet")+'</b><small class="ar">'+ln+'</small></div><span class="tot2">'+eur(e.tot)+'</span></div>',can=(isAdmin()||e.o===DEV);h+='<div class="sw hs">'+(can?'<button class="swa" data-a="swdel" data-t="hist" data-id="'+k+'">Zmazať</button>':'')+'<div class="swr">'+inn+'</div></div>'});
    h+='</div>'}
   h+='</div>'});
  return h}
@@ -651,7 +653,7 @@ function pubRate(e,pid){
  if(openO[pid]&&oth.length){h+='<div class="oth"><div class="log">Pivo · Krčma · Obsluha</div>';oth.forEach(function(m){h+='<div class="li"><span>'+esc(D.mem[m].name)+'</span><b>'+KIND.map(function(k){var g=(R[k[0]]||{})[m];return g?'<span class="g'+Math.round(g)+'t">'+g+'</span>':'–'}).join(" · ")+'</b></div>'});h+='</div>'}
  return h+'</div>';
 }
-function nameCard(){return '<div class="card"><div class="ct">Tvoje meno</div><div class="add"><input id="mn" data-enter placeholder="Napr. Roman" maxlength="30"><button class="pri" data-a="savename">Uložiť</button></div><div class="log'+(msg==="name"?' danger':'')+'">Meno uvidia ostatní pri hodnoteniach. Najprv ho vyplň.</div></div>'}
+function nameCard(){var ml=Object.keys(D.mem).filter(function(m){return !D.mem[m].hidden&&!D.mem[m].inactive}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});return '<div class="card"><div class="ct">Tvoje meno</div>'+(ml.length?'<div class="cme"><select id="mnsel" aria-label="Vyber meno zo zoznamu"><option value="">vyber meno zo zoznamu</option>'+ml.map(function(m){return '<option value="'+m+'">'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="claimsel">Potvrdiť</button></div><div class="log" style="margin:10px 0 6px">alebo napíš nové meno</div>':'')+'<div class="add"><input id="mn" data-enter placeholder="Napr. Roman" maxlength="30"><button class="pri" data-a="savename">Uložiť</button></div><div class="log'+(msg==="name"?' danger':'')+'">Meno uvidia ostatní pri hodnoteniach. Najprv ho vyplň.</div></div>'}
 function statView(){
  var all=edsSorted(),cur=D.ed[stsc]?stsc:all[0],sel=cur?[cur]:[];
  var isAll=stsc==="all",h='<div class="chips">'+all.map(function(id){return '<button data-a="sc" data-id="'+id+'" class="'+(id===cur&&!isAll?"on":"")+'">'+esc(D.ed[id].year)+'</button>'}).join("")+'<button data-a="sc" data-id="all" class="'+(isAll?"on":"")+'">Všetky</button></div>';
@@ -708,7 +710,6 @@ function cansSet(){
  var adm=isAdmin(),ids=cansAlpha(Object.keys(D.cans)),have={};ids.forEach(function(i){have[norm(D.cans[i].name)]=1});
  var miss=CANDB.filter(function(r){return !have[norm(r[0])]}).length;
  var h='<div class="card"><div class="ct">Pridať plechovku</div><div class="add"><input id="canq" list="candl" placeholder="Hľadaj alebo napíš názov" autocomplete="off"><button class="pri" data-a="canadd">Pridať</button></div><datalist id="candl">'+CANDB.map(function(r){return '<option value="'+esc(r[0])+'">'}).join("")+'</datalist>';
- if(miss)h+='<div class="row" style="margin-top:10px"><button data-a="canall">Pridať všetky z databázy ('+miss+')</button></div>';
  h+='</div><div class="card"><div class="ct">Plechovky<span>'+ids.length+'</span></div>';
  if(!ids.length)h+='<div class="log">Zatiaľ žiadne. Vyber z databázy alebo napíš vlastný názov.</div>';
  else h+='<div class="log">Ťukni na plechovku a doplň objem a alkohol. Zoradené sú podľa abecedy.'+(adm?' Potiahni riadok doľava = zmazať.':'')+'</div>';
@@ -733,12 +734,8 @@ function slotCard(k,rt,I){var sl="s"+k,lk=I.lk,ans=(D.ca||{})[sl],rev=lk&&ans&&D
 function cansRate(I){
  var cm=I.cm,lk=I.lk,n=I.n,parts=I.parts,rt=cRater(),h='';
  h+='<div class="card"><div class="ct">Plechovky'+(lk?'<span>🔒 zamknuté</span>':'')+'</div><div class="rt"><span class="rl">Počet plechoviek</span><input class="nn" inputmode="numeric" data-f="cmn" value="'+(n||"")+'" placeholder="napr. 5" aria-label="Počet plechoviek"'+(lk?' disabled':'')+'></div></div>';
- var fm=Object.keys(D.mem).filter(function(m){return !D.cp[m]&&!D.mem[m].hidden&&!D.mem[m].inactive}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")});
- h+='<div class="card"><div class="ct">Účastníci<span>'+parts.length+'</span></div>';
- if(rt)h+='<div class="log cmerow"><span>Hodnotíš ako <b>'+esc(D.mem[rt].name)+'</b></span>'+(lk?'':'<button class="sm" data-a="cmeclr">Zmeniť</button>')+'</div>';
- else if(lk)h+='<div class="log">Hodnotenie je zamknuté.</div>';
- else h+='<div class="log">Vyber svoje meno a potvrď. Ostatní sa pripoja sami zo svojich telefónov.</div><div class="cme"><select id="cme" aria-label="Moje meno"><option value="">vyber svoje meno</option>'+fm.map(function(m){return '<option value="'+m+'"'+(m===DEV?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="cmeok">Potvrdiť</button></div>';
- h+='</div>';
+ var fm=Object.keys(D.mem).filter(function(m){return !D.mem[m].hidden&&!D.mem[m].inactive&&(!D.cp[m]||m===rt)}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")}),cur=rt||(D.mem[DEV]?DEV:"");
+ h+='<div class="card"><div class="ct">Moje meno</div><div class="cme"><select id="cme" aria-label="Moje meno"'+(lk?' disabled':'')+'><option value="">vyber svoje meno</option>'+fm.map(function(m){return '<option value="'+m+'"'+(m===cur?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select>'+(lk?'':'<button class="pri" data-a="cmeok">Potvrdiť</button>')+'</div>'+(lk?'<div class="log" style="margin-top:8px">Hodnotenie je zamknuté.</div>':'')+'</div>';
  if(!n)return h+'<div class="card empty">Zadaj počet plechoviek, ktoré budete hodnotiť.</div>';
  var names=[];for(var k=1;k<=n;k++)names.push("Plechovka "+k);
  if(pagerNames.join("|")!==names.join("|"))pagerIdx=0;pagerNames=names;pagerIdx=Math.max(0,Math.min(pagerIdx,n-1));
@@ -1907,17 +1904,18 @@ document.addEventListener("click",function(e){
  else if(a==="canall"){var hv={};Object.keys(D.cans).forEach(function(i){hv[norm(D.cans[i].name)]=1});CANDB.filter(function(r){return !hv[norm(r[0])]}).forEach(function(r,ix){o["cans/"+uid()]=canFrom(r,now+ix)})}
  else if(a==="candel"){if(!isAdmin())return;if(armed!=="cd"+id){armed="cd"+id;render();return}armed=null;o["cans/"+id]=null}
  else if(a==="cano"){openC=openC===id?null:id;render();return}
- else if(a==="cmeok"){if((D.cm||{}).lock)return;var cm0=document.getElementById("cme"),cmv=cm0?cm0.value:"";if(!cmv||!D.mem[cmv]||D.cp[cmv])return;LS.s("cme",cmv);o["cp/"+cmv]=true}
+ else if(a==="cmeok"){if((D.cm||{}).lock)return;var cm0=document.getElementById("cme"),cmv=cm0?cm0.value:"",old0=LS.g("cme");if(!cmv||!D.mem[cmv]||cmv===old0&&D.cp[cmv]||(D.cp[cmv]&&cmv!==old0))return;if(old0&&D.cp[old0])o["cp/"+old0]=null;LS.s("cme",cmv);o["cp/"+cmv]=true}
  else if(a==="cmeclr"){if((D.cm||{}).lock)return;var me0=LS.g("cme");LS.s("cme","");if(!me0){render();return}o["cp/"+me0]=null}
  else if(a==="cprem"){if((D.cm||{}).lock||!isAdmin())return;if(LS.g("cme")===id)LS.s("cme","");o["cp/"+id]=null}
  else if(a==="crate"){var crt=cRater();if(!crt||(D.cm||{}).lock)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv}
  else if(a==="cmlock"){if(!isAdmin())return;o["cm/lock"]=(D.cm||{}).lock?null:true}
  else if(a==="cexport"){try{exportCans();xMsg=""}catch(x){xMsg="Export sa nepodaril: "+x.message}render();return}
- else if(a==="swdel"){var sty=b.dataset.t;if(sty==="mem"){if(!isAdmin())return;o["mem/"+id]=null}else if(sty==="item"){if(!D.items[id])return;o["items/"+id]=null}else if(sty==="can"){if(!isAdmin())return;o["cans/"+id]=null}else if(sty==="beer"){o["pubs/"+b.dataset.p+"/beers/"+id]=null}else if(sty==="ppl"){o["people/"+id]=null;o["orders/"+id]=null;if(open===id)open=null}else return}
+ else if(a==="swdel"){var sty=b.dataset.t;if(sty==="mem"){if(!isAdmin())return;o["mem/"+id]=null}else if(sty==="item"){if(!D.items[id])return;o["items/"+id]=null}else if(sty==="can"){if(!isAdmin())return;o["cans/"+id]=null}else if(sty==="beer"){o["pubs/"+b.dataset.p+"/beers/"+id]=null}else if(sty==="hist"){var he2=D.hist[id];if(!he2||!(isAdmin()||he2.o===DEV))return;o["hist/"+id]=null}else if(sty==="ppl"){o["people/"+id]=null;o["orders/"+id]=null;if(open===id)open=null}else return}
  else if(a==="pick"){var pv=document.getElementById("psel").value;if(!pv)return;var pbs=D.pubs[pv]&&D.pubs[pv].beers?Object.keys(D.pubs[pv].beers).filter(function(bb){return !D.pubs[pv].beers[bb].off}):[];o["ed/"+b.dataset.e+"/pubs/"+pv]={t:now,beer:pbs.length===1?D.pubs[pv].beers[pbs[0]].name:""}}
  else if(a==="unpick"){var ue=b.dataset.e;if(armed==="up"+id){o["ed/"+ue+"/pubs/"+id]=null;o["rt/"+ue+"/"+id]=null;armed=null}else{armed="up"+id;render();return}}
  else if(a==="rate"){var w=who();if(!D.mem[w]){msg="name";render();return}var rv=parseInt(b.dataset.v,10),rr=((D.rt[b.dataset.e]||{})[id]||{})[b.dataset.k]||{};o["rt/"+b.dataset.e+"/"+id+"/"+b.dataset.k+"/"+w]=rr[w]===rv?null:rv}
  else if(a==="claim"){DEV=id;LS.s("dev",id);as="";armed=null;render();return}
+ else if(a==="claimsel"){var mcs=document.getElementById("mnsel"),mcv=mcs?mcs.value:"";if(!mcv||!D.mem[mcv])return;DEV=mcv;LS.s("dev",mcv);as="";msg="";render();return}
  else if(a==="savename"){var nm=document.getElementById("mn").value.trim();if(!nm)return;var ex=!D.mem[DEV]&&Object.keys(D.mem).filter(function(k){return norm(D.mem[k].name)===norm(nm)})[0];if(ex){DEV=ex;LS.s("dev",ex);as="";msg="";render();return}o["mem/"+DEV+"/name"]=nm;if(!D.mem[DEV])o["mem/"+DEV+"/t"]=now;msg=""}
  else if(a==="addmem"){var m2=document.getElementById("mn2").value.trim();if(!m2)return;o["mem/"+uid()]={name:m2,t:now}}
  else if(a==="delmem"){if(armed==="dm"+id){o["mem/"+id]=null;armed=null}else{armed="dm"+id;render();return}}
