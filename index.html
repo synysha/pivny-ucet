@@ -628,12 +628,10 @@ function fix4Obj(n){var o={"meta/fix4":true};HIST.forEach(function(H){var E=n.ed
 var umsg="";
 function unlockBlock(){
  var eds=edsSorted().filter(function(e){return D.ed[e].lock}),cl=(D.cm||{}).lock,h='<div class="ct" style="margin-top:18px">Odomknutie</div>';
- if(!eds.length&&!cl)return h+'<div class="log">Nič nie je zamknuté.</div>';
- h+='<div class="log">Odomknúť môže len admin a len tu. Zadaj heslo admina a vyber, čo odomknúť.</div><div class="add"><input id="upw" type="password" placeholder="Heslo admina" autocomplete="off"></div>';
- eds.forEach(function(e){h+='<div class="li"><span>🔒 '+esc((D.ed[e].no?D.ed[e].no+". ročník · ":"")+D.ed[e].year)+'</span><button class="sm" data-a="unlock" data-k="e" data-id="'+e+'">Odomknúť</button></div>'});
- if(cl)h+='<div class="li"><span>🔒 Hodnotenie plechoviek</span><button class="sm" data-a="unlock" data-k="c">Odomknúť</button></div>';
- h+='<div class="row" style="margin-top:10px"><button class="pri" data-a="unlockall">Odomknúť všetko</button></div>'+(umsg?'<div class="log danger">'+esc(umsg)+'</div>':'');
- return h}
+ if(!eds.length&&!cl)return h+'<div class="log">Nič nie je zamknuté.</div>'+(umsg?'<div class="log">'+esc(umsg)+'</div>':'');
+ var parts=[];if(eds.length)parts.push(eds.length+" "+(eds.length===1?"ročník":eds.length<5?"ročníky":"ročníkov"));if(cl)parts.push("hodnotenie plechoviek");
+ h+='<div class="log">Zamknuté: '+parts.join(", ")+'. Po zadaní hesla admina sa odomkne všetko naraz.</div><div class="add"><input id="upw" data-f="unlockpw" type="password" placeholder="Heslo admina" autocomplete="off"></div>';
+ return h+(umsg?'<div class="log danger">'+esc(umsg)+'</div>':'')}
 function adminCard(){var h='<div class="card"><div class="ct">Admin</div>';
  if(isAdmin())h+='<div class="log">Si prihlásený ako admin. Zamykať môžeš v záložke TourDeBeer, odomykať len tu.</div><div class="row"><button data-a="adminoff">Odhlásiť admina</button></div>'+unlockBlock();
  else if(!D.meta.apin)h+='<div class="log">Nastav si admin PIN (aspoň 4 znaky). Kto ho nastaví ako prvý, je admin.</div><div class="add"><input id="apn" data-enter type="password" placeholder="Nový admin PIN" autocomplete="off"><button class="pri" data-a="setpin">Nastaviť</button></div>';
@@ -1916,7 +1914,6 @@ document.addEventListener("click",function(e){
  else if(a==="cmeclr"){if((D.cm||{}).lock)return;var me0=LS.g("cme");LS.s("cme","");if(!me0){render();return}o["cp/"+me0]=null}
  else if(a==="cprem"){if((D.cm||{}).lock||!isAdmin())return;if(LS.g("cme")===id)LS.s("cme","");o["cp/"+id]=null}
  else if(a==="crate"){var crt=cRater();if(!crt||(D.cm||{}).lock)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv;if(!D.cp[crt])o["cp/"+crt]=true}
- else if(a==="unlock"||a==="unlockall"){if(!isAdmin())return;var upw=document.getElementById("upw"),upv=upw?upw.value.trim():"";if(!upv||hpin(upv)!==D.meta.apin){umsg="Nesprávne heslo.";render();return}umsg="";if(a==="unlockall"){Object.keys(D.ed).forEach(function(e){if(D.ed[e].lock)o["ed/"+e+"/lock"]=null});if((D.cm||{}).lock)o["cm/lock"]=null}else if(b.dataset.k==="c")o["cm/lock"]=null;else o["ed/"+id+"/lock"]=null}
  else if(a==="cmlock"){if(!isAdmin()||(D.cm||{}).lock)return;o["cm/lock"]=true}
  else if(a==="cexport"){try{exportCans();xMsg=""}catch(x){xMsg="Export sa nepodaril: "+x.message}render();return}
  else if(a==="swdel"){if(!isAdmin())return;var sty=b.dataset.t;if(sty==="pub"){o["pubs/"+id]=null;if(openP===id)openP=null}else if(sty==="mem"){if(!isAdmin())return;o["mem/"+id]=null}else if(sty==="item"){if(!D.items[id])return;o["items/"+id]=null}else if(sty==="can"){if(!isAdmin())return;o["cans/"+id]=null}else if(sty==="beer"){o["pubs/"+b.dataset.p+"/beers/"+id]=null}else if(sty==="hist"){var he2=D.hist[id];if(!he2||!(isAdmin()||he2.o===DEV))return;o["hist/"+id]=null}else if(sty==="ppl"){o["people/"+id]=null;o["orders/"+id]=null;if(open===id)open=null}else return}
@@ -1947,6 +1944,7 @@ document.addEventListener("change",function(e){
   if(sl==="beer")o2["ed/"+t.dataset.e+"/pubs/"+t.dataset.id+"/beer"]=t.value||null;
   else if(sl==="miss"){if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/miss/"+who()]=t.value||null}
   W(o2);return}
+ if(t.dataset.f==="unlockpw"){if(!isAdmin()){render();return}var upv=t.value.trim();if(!upv){return}if(hpin(upv)!==D.meta.apin){umsg="Nesprávne heslo.";render();return}umsg="Odomknuté.";Object.keys(D.ed).forEach(function(e){if(D.ed[e].lock)o2["ed/"+e+"/lock"]=null});if((D.cm||{}).lock)o2["cm/lock"]=null;if(Object.keys(o2).length)W(o2);else render();return}
  if(t.dataset.f==="cmn"){if((D.cm||{}).lock){render();return}var nn0=parseInt(t.value,10);if(isNaN(nn0)||nn0<0)nn0=0;if(nn0>30)nn0=30;o2["cm/n"]=nn0;W(o2);return}
  if(t.dataset.f==="ctip"){var ctr=cRater();if(!ctr||(D.cm||{}).lock){render();return}o2["ct/"+t.dataset.s+"/"+ctr]=t.value||null;if(!D.cp[ctr])o2["cp/"+ctr]=true;W(o2);return}
  if(t.dataset.f==="cansw"){if(!isAdmin()){render();return}o2["ca/"+t.dataset.s]=t.value||null;W(o2);return}
