@@ -152,7 +152,7 @@ nav .orb svg{width:26px;height:26px}
 .plist{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .plist button{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:6px 10px 6px 13px;font-size:14px;font-weight:500}
 .plist button svg{width:12px;height:12px;color:var(--red)}
-.sw{position:relative;overflow:hidden;border-radius:12px;margin:0 0 8px;-webkit-user-select:none;user-select:none}
+.sw{position:relative;overflow:hidden;border-radius:12px;margin:0 0 8px;-webkit-user-select:none;user-select:none;touch-action:pan-y;-webkit-touch-callout:none}
 .sw .swa{position:absolute;right:0;top:0;bottom:0;width:88px;background:#ef4444;color:#fff;border:0;border-radius:0 12px 12px 0;font-weight:700;font-size:14px}
 .sw .swr{position:relative;transition:transform .2s ease;will-change:transform}
 .sw .swr>.pr.ip,.sw .swr>.li.mrow,.sw .swr>.cbox,.sw .swr>.li{margin:0}
@@ -533,7 +533,7 @@ function dlab(t){var d=new Date(t);return d.getDate()+". "+(d.getMonth()+1)+". "
 function hisView(){
  var h=seg("hsub",[["g","Skupinový"],["i","Individuálny"]],hsub);
  var ids=Object.keys(D.hist).filter(function(k){var e=D.hist[k];return e.k===hsub&&(hsub==="g"||e.o===DEV)});
- if(ids.length)h+='<div class="log">Potiahni záznam doľava = zmazať.</div>';
+ if(ids.length)h+='<div class="log">Ťukni na deň a potom potiahni záznam doľava = zmazať.</div>';
  if(!ids.length)return h+'<div class="card empty">Zatiaľ žiadna história. Účet sa sem uloží po stlačení Zaplatil.</div>';
  var days={};ids.forEach(function(k){var dk=dkey(D.hist[k].t0);(days[dk]=days[dk]||[]).push(k)});
  Object.keys(days).sort(function(a,b){return b-a}).forEach(function(dk){
@@ -705,7 +705,7 @@ function canFrom(r,t){var c={name:r[0],t:t};if(r[6])c.vol=String(r[6]);if(r[5])c
 function canInfo(c){return [c.vol?c.vol+" ml":"",c.abv?c.abv+" %":""].filter(Boolean).join(" · ")}
 function cansAlpha(ids){return ids.sort(function(a,b){return D.cans[a].name.localeCompare(D.cans[b].name,"sk")})}
 var csub="rate",openC=null,crater="",CK=[["chut","Chuť"],["dizajn","Dizajn plechovky"],["tip","Tip"]];
-function cRater(){var me=LS.g("cme");return me&&D.cp[me]&&D.mem[me]?me:""}
+function cRater(){return D.mem[DEV]&&!D.mem[DEV].hidden?DEV:""}
 function cansSet(){
  var adm=isAdmin(),ids=cansAlpha(Object.keys(D.cans)),have={};ids.forEach(function(i){have[norm(D.cans[i].name)]=1});
  var miss=CANDB.filter(function(r){return !have[norm(r[0])]}).length;
@@ -727,15 +727,13 @@ function slotCard(k,rt,I){var sl="s"+k,lk=I.lk,ans=(D.ca||{})[sl],rev=lk&&ans&&D
  CK.slice(0,2).forEach(function(kk){var kd=kk[0],v=cVals(sl,kd),own=rt&&((((D.cv||{})[sl]||{})[rt]||{})[kd])||0;own=own>=1&&own<=5?Math.round(own):0;
   h+='<div class="rm"><div class="rmh"><span>'+kk[1]+'</span><small>'+(v.length?'Ø '+f1(avgs(v))+' ('+v.length+')':'zatiaľ nič')+'</small></div><div class="meter">';
   for(var g=1;g<=5;g++)h+='<button data-a="crate" data-id="'+sl+'" data-k="'+kd+'" data-v="'+g+'" class="g'+g+(g===own?' on':'')+'" aria-label="Známka '+g+' z 5"'+(rt&&!lk?'':' disabled')+'>'+g+'</button>';
-  h+='</div><div class="rmc'+(own?' g'+own+'t':' hint')+'">'+(own?GL[own]:(rt?(lk?'Hodnotenie je zamknuté.':'Kliknutím vyberieš hodnotenie.'):'Najprv vyber účastníkov.'))+'</div></div>'});
+  h+='</div><div class="rmc'+(own?' g'+own+'t':' hint')+'">'+(own?GL[own]:(rt?(lk?'Hodnotenie je zamknuté.':'Kliknutím vyberieš hodnotenie.'):'Najprv vyber svoje meno.'))+'</div></div>'});
  h+='<div class="rm"><div class="rmh"><span>Tip</span><small>'+(rev?(gs&&gs===ans?'✓ uhádnuté':(gs?'✗ nesprávne':'bez tipu')):'aká je to plechovka?')+'</small></div><select data-f="ctip" data-s="'+sl+'"'+(rt&&!lk?'':' disabled')+'>'+cOpts(gs)+'</select>'+(rev?'<div class="rmc g1t">Správne: '+esc(cName(ans))+'</div>':'')+'</div>';
  if(I.adm)h+='<div class="rm"><div class="rmh"><span>Správna odpoveď (admin)</span></div><select data-f="cansw" data-s="'+sl+'">'+cOpts(ans||"")+'</select></div>';
  return h+'</div>'}
 function cansRate(I){
  var cm=I.cm,lk=I.lk,n=I.n,parts=I.parts,rt=cRater(),h='';
  h+='<div class="card"><div class="ct">Plechovky'+(lk?'<span>🔒 zamknuté</span>':'')+'</div><div class="rt"><span class="rl">Počet plechoviek</span><input class="nn" inputmode="numeric" data-f="cmn" value="'+(n||"")+'" placeholder="napr. 5" aria-label="Počet plechoviek"'+(lk?' disabled':'')+'></div></div>';
- var fm=Object.keys(D.mem).filter(function(m){return !D.mem[m].hidden&&!D.mem[m].inactive&&(!D.cp[m]||m===rt)}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")}),cur=rt||(D.mem[DEV]?DEV:"");
- h+='<div class="card"><div class="ct">Moje meno</div><div class="cme"><select id="cme" aria-label="Moje meno"'+(lk?' disabled':'')+'><option value="">vyber svoje meno</option>'+fm.map(function(m){return '<option value="'+m+'"'+(m===cur?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select>'+(lk?'':'<button class="pri" data-a="cmeok">Potvrdiť</button>')+'</div>'+(lk?'<div class="log" style="margin-top:8px">Hodnotenie je zamknuté.</div>':'')+'</div>';
  if(!n)return h+'<div class="card empty">Zadaj počet plechoviek, ktoré budete hodnotiť.</div>';
  var names=[];for(var k=1;k<=n;k++)names.push("Plechovka "+k);
  if(pagerNames.join("|")!==names.join("|"))pagerIdx=0;pagerNames=names;pagerIdx=Math.max(0,Math.min(pagerIdx,n-1));
@@ -1794,7 +1792,7 @@ function drUp(){if(!DR)return;var d=DR;if(!d.on){drCancel();return}
  var cl=d.to!==d.from?dgColl(d.g):null;
  if(cl){var ids=d.cards.map(function(c){return c.dataset.did}),mvd=ids.splice(d.from,1)[0];ids.splice(d.to,0,mvd);var coll=cl[0],base=Math.min.apply(null,ids.map(function(i){return (coll[i]||{}).t||0})),ob={};ids.forEach(function(i,j){if(coll[i]&&(coll[i].t||0)!==base+j)ob[cl[1]+i+"/t"]=base+j});if(Object.keys(ob).length)W(ob);else render()}else render()}
 function swDown(t,x,y){if(!t||!t.closest)return;if(t.closest(".swa"))return;var w=t.closest(".sw");if(swOpen&&swOpen!==w)swClose();if(!w||!w.querySelector(".swa"))return;SW={w:w,x0:x,y0:y,h:false,base:w.classList.contains("open")?-SWW:0}}
-function swMove(x,y,e){if(!SW)return;var dx=x-SW.x0,dy=y-SW.y0;if(!SW.h){if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.2){SW.h=true;SW.w.classList.add("swing");drCancel();var f=document.activeElement;if(f&&f.blur&&f.closest&&f.closest(".sw"))f.blur();SW.w.querySelector(".swr").style.transition="none"}else if(Math.abs(dy)>8){SW=null;return}}
+function swMove(x,y,e){if(!SW)return;var dx=x-SW.x0,dy=y-SW.y0;if(!SW.h){if(Math.abs(dx)>6&&Math.abs(dx)>Math.abs(dy)){SW.h=true;SW.w.classList.add("swing");drCancel();var f=document.activeElement;if(f&&f.blur&&f.closest&&f.closest(".sw"))f.blur();SW.w.querySelector(".swr").style.transition="none"}else if(Math.abs(dy)>8){SW=null;return}}
  if(SW.h){if(e&&e.cancelable)e.preventDefault();var p=Math.max(-SWW-24,Math.min(0,SW.base+dx));SW.p=p;SW.w.querySelector(".swr").style.transform="translateX("+p+"px)"}}
 function swUp(){if(!SW)return;var d=SW;SW=null;if(!d.h)return;swSup=true;setTimeout(function(){swSup=false},350);var r=d.w.querySelector(".swr");r.style.transition="";if((d.p||0)<-SWW/2){r.style.transform="translateX("+(-SWW)+"px)";d.w.classList.add("open");swOpen=d.w}else{r.style.transform="";d.w.classList.remove("open");if(swOpen===d.w)swOpen=null;setTimeout(function(){if(!d.w.classList.contains("open"))d.w.classList.remove("swing")},240)}}
 document.addEventListener("touchstart",function(e){if(e.touches.length===1){var q=e.touches[0];swDown(e.target,q.clientX,q.clientY);drDown(e.target,q.clientX,q.clientY)}},{passive:true});
@@ -1907,7 +1905,7 @@ document.addEventListener("click",function(e){
  else if(a==="cmeok"){if((D.cm||{}).lock)return;var cm0=document.getElementById("cme"),cmv=cm0?cm0.value:"",old0=LS.g("cme");if(!cmv||!D.mem[cmv]||cmv===old0&&D.cp[cmv]||(D.cp[cmv]&&cmv!==old0))return;if(old0&&D.cp[old0])o["cp/"+old0]=null;LS.s("cme",cmv);o["cp/"+cmv]=true}
  else if(a==="cmeclr"){if((D.cm||{}).lock)return;var me0=LS.g("cme");LS.s("cme","");if(!me0){render();return}o["cp/"+me0]=null}
  else if(a==="cprem"){if((D.cm||{}).lock||!isAdmin())return;if(LS.g("cme")===id)LS.s("cme","");o["cp/"+id]=null}
- else if(a==="crate"){var crt=cRater();if(!crt||(D.cm||{}).lock)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv}
+ else if(a==="crate"){var crt=cRater();if(!crt||(D.cm||{}).lock)return;var cvv=parseInt(b.dataset.v,10),ck=b.dataset.k,cur=((((D.cv||{})[id]||{})[crt]||{})[ck]);o["cv/"+id+"/"+crt+"/"+ck]=cur===cvv?null:cvv;if(!D.cp[crt])o["cp/"+crt]=true}
  else if(a==="cmlock"){if(!isAdmin())return;o["cm/lock"]=(D.cm||{}).lock?null:true}
  else if(a==="cexport"){try{exportCans();xMsg=""}catch(x){xMsg="Export sa nepodaril: "+x.message}render();return}
  else if(a==="swdel"){var sty=b.dataset.t;if(sty==="mem"){if(!isAdmin())return;o["mem/"+id]=null}else if(sty==="item"){if(!D.items[id])return;o["items/"+id]=null}else if(sty==="can"){if(!isAdmin())return;o["cans/"+id]=null}else if(sty==="beer"){o["pubs/"+b.dataset.p+"/beers/"+id]=null}else if(sty==="hist"){var he2=D.hist[id];if(!he2||!(isAdmin()||he2.o===DEV))return;o["hist/"+id]=null}else if(sty==="ppl"){o["people/"+id]=null;o["orders/"+id]=null;if(open===id)open=null}else return}
@@ -1939,7 +1937,7 @@ document.addEventListener("change",function(e){
   else if(sl==="miss"){if(!D.mem[who()]){msg="name";render();return}o2["ed/"+t.dataset.e+"/miss/"+who()]=t.value||null}
   W(o2);return}
  if(t.dataset.f==="cmn"){if((D.cm||{}).lock){render();return}var nn0=parseInt(t.value,10);if(isNaN(nn0)||nn0<0)nn0=0;if(nn0>30)nn0=30;o2["cm/n"]=nn0;W(o2);return}
- if(t.dataset.f==="ctip"){var ctr=cRater();if(!ctr||(D.cm||{}).lock){render();return}o2["ct/"+t.dataset.s+"/"+ctr]=t.value||null;W(o2);return}
+ if(t.dataset.f==="ctip"){var ctr=cRater();if(!ctr||(D.cm||{}).lock){render();return}o2["ct/"+t.dataset.s+"/"+ctr]=t.value||null;if(!D.cp[ctr])o2["cp/"+ctr]=true;W(o2);return}
  if(t.dataset.f==="cansw"){if(!isAdmin()){render();return}o2["ca/"+t.dataset.s]=t.value||null;W(o2);return}
  if(t.dataset.f==="cname"||t.dataset.f==="cvol"||t.dataset.f==="cabv"){var cid=t.dataset.id,fv=t.value.trim();if(!D.cans[cid]){render();return}
   if(t.dataset.f==="cname"){if(!fv){render();return}o2["cans/"+cid+"/name"]=fv}
