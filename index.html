@@ -168,6 +168,11 @@ nav .orb svg{width:26px;height:26px}
 .tb.tight td:first-child{overflow:hidden;text-overflow:ellipsis}.tb.tight .sn{display:inline-block;min-width:14px;margin-right:6px;color:var(--mute);font-size:12px}
 .sw.hs{border-radius:0;margin:0}.sw.hs .swr{background:#18181B}.sw.hs .swa{border-radius:0}.sw.hs .swr>.li.hl{margin:0}
 .sw.pk{border-radius:0;margin:0}.sw.pk .swr{background:#18181B}.sw.pk .swa{border-radius:0}
+.mapbox.leaflet-container{background:#111113}
+input.fitw{flex:0 1 auto;min-width:4ch;max-width:calc(100% - 60px)}
+.mrow .ishl,.swr>.li .tapc{margin-left:auto}
+.cbox .oth{background:none;border:0;padding:2px 4px 8px;margin:0}
+.mrow>input.fitw:first-child,.swr>.li>input.fitw{flex:0 1 auto}
 </style>
 </head>
 <body>
@@ -292,18 +297,17 @@ function loadLeaflet(cb){
  document.head.appendChild(sc);
 }
 function tiles(m){L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(m)}
-var mapEl=null,mapGroup=null;
+var mapEl=null,mapGroup=null,mapLast=null;
 function mapFill(m,first){
  mapGroup.clearLayers();var pts=[];
  mapItemsCur.forEach(function(it){if(it.lat==null)return;pts.push([it.lat,it.lng]);
   L.marker([it.lat,it.lng],{icon:L.divIcon({className:"pin"+(it.closed?" off":"")+(it.geo==="approx"?" apx":"")+(it.label==="★"?" stl":""),html:"<span>"+esc(String(it.label))+"</span>",iconSize:it.label==="★"?[15,15]:[20,20],iconAnchor:it.label==="★"?[7,7]:[10,10]})}).addTo(mapGroup).bindPopup("<b>"+esc(it.name)+"</b>"+(it.area?"<br>"+esc(it.area):"")+(it.sub?"<br>"+esc(it.sub):"")+(it.geo==="approx"?"<br><i>približná poloha</i>":it.geo==="osm"?"<br><i>nájdené automaticky</i>":""))});
  if(mapRouteCur&&pts.length>1)L.polyline(pts,{color:"#4fd1a1",weight:3,opacity:.85,dashArray:"8 8"}).addTo(mapGroup);
- if(first){if(pts.length>1)m.fitBounds(pts,{padding:[30,30],maxZoom:15});else if(pts.length===1)m.setView(pts[0],15)}
- else if(pts.length>1){var bb=L.latLngBounds(pts);if(!m.getBounds().contains(bb))m.fitBounds(bb,{padding:[30,30],maxZoom:15,animate:true})}
- else if(pts.length===1&&!m.getBounds().contains(pts[0]))m.setView(pts[0],15)}
+ if(first){if(pts.length>1)m.fitBounds(pts,{padding:[30,30],maxZoom:15,animate:false});else if(pts.length===1)m.setView(pts[0],15,{animate:false})}
+}
 function buildMap(el){
  if(el._lf)return;el._lf=1;
- var m=L.map(el).setView([48.7745,18.6240],13);tiles(m);mapGroup=L.layerGroup().addTo(m);mapFill(m,true);
+ var m=L.map(el,{zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView(mapLast?mapLast[0]:[48.7745,18.6240],mapLast?mapLast[1]:13,{animate:false});tiles(m);mapGroup=L.layerGroup().addTo(m);mapFill(m,!mapLast);
  mapInst=m;mapEl=el;
 }
 function buildPicker(el){
@@ -320,7 +324,7 @@ function afterRender(){
  var pgr=document.getElementById("pager");
  if(pgr){pgr.scrollLeft=pagerIdx*(pgr.clientWidth+12);var tm=null;pgr.addEventListener("scroll",function(){clearTimeout(tm);tm=setTimeout(function(){var i=Math.round(pgr.scrollLeft/Math.max(1,pgr.clientWidth+12));if(i!==pagerIdx){pagerIdx=i;pgInd()}},80)})}
  var mph=document.getElementById("map");
- if(mapInst&&!mph){try{mapInst.remove()}catch(e){}mapInst=null;mapEl=null;mapGroup=null}
+ if(mapInst&&!mph){try{var mc=mapInst.getCenter();mapLast=[[mc.lat,mc.lng],mapInst.getZoom()];mapInst.remove()}catch(e){}mapInst=null;mapEl=null;mapGroup=null}
  if(mapInst&&mph&&mapEl){mph.parentNode.replaceChild(mapEl,mph);try{mapInst.invalidateSize(false);mapFill(mapInst,false)}catch(e){}}
  if(pickInst){try{pickInst.remove()}catch(e){}pickInst=null}
  if(!mph&&!document.getElementById("pmap"))return;
@@ -820,10 +824,10 @@ function tdbView(){
 }
 function profView(){
  var adm=isAdmin(),me=D.mem[DEV],ms=Object.keys(D.mem).filter(function(k){return !D.mem[k].hidden}).sort(function(a,b){return (D.mem[a].inactive?1:0)-(D.mem[b].inactive?1:0)||(D.mem[a].t||0)-(D.mem[b].t||0)});
- var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" data-orig="'+esc(me?me.name:"")+'" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename"'+(me?' style="display:none"':'')+'>Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div></div>';
+ var h='<div class="card"><div class="ct">Môj profil</div><div class="add"><input id="mn" data-enter placeholder="Tvoje meno" maxlength="30" data-orig="'+esc(me?me.name:"")+'" value="'+esc(me?me.name:"")+'"><button class="pri" data-a="savename"'+(me?' style="display:none"':'')+'>Uložiť</button></div><div class="log">Meno uvidia ostatní pri hodnoteniach.</div><div class="log" style="margin:12px 0 6px">alebo vyber svoje meno zo zoznamu</div><div class="cme"><select id="mnsel" aria-label="Vyber svoje meno"><option value="">vyber meno zo zoznamu</option>'+ms.filter(function(m){return !D.mem[m].inactive}).sort(function(a,b){return D.mem[a].name.localeCompare(D.mem[b].name,"sk")}).map(function(m){return '<option value="'+m+'"'+(m===DEV?' selected':'')+'>'+esc(D.mem[m].name)+'</option>'}).join("")+'</select><button class="pri" data-a="claimsel">Potvrdiť</button></div></div>';
  h+=adminCard();
  h+='<div class="card"><div class="ct">Účastníci<span>'+ms.length+'</span></div>'+'<div class="log">Podrž meno a potiahni hore alebo dole = poradie. Dvakrát ťukni na meno = to som ja.'+(adm?' Zaškrtnuté políčko = už sa nezúčastňuje. Riadok potiahnutý doľava zmažeš.':'')+'</div>';
- ms.forEach(function(m){var inn='<div class="li mrow" data-m="'+m+'"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno"'+(D.mem[m].inactive?' class="dim"':'')+'>'+(adm?'<label class="ishl"><input type="checkbox" class="mchk" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+' aria-label="Už sa nezúčastňuje" title="Už sa nezúčastňuje"></label>':'')+'</div>';h+='<div class="sw" data-dg="mem" data-did="'+m+'">'+(adm?'<button class="swa" data-a="swdel" data-t="mem" data-id="'+m+'">Zmazať</button>':'')+'<div class="swr">'+inn+'</div></div>'});
+ ms.forEach(function(m){var inn='<div class="li mrow" data-m="'+m+'"><input data-f="mname" data-m="'+m+'" value="'+esc(D.mem[m].name)+'" aria-label="Meno" class="fitw'+(D.mem[m].inactive?' dim':'')+'" style="'+fw(D.mem[m].name)+'">'+(adm?'<label class="ishl"><input type="checkbox" class="mchk" data-f="minactive" data-m="'+m+'"'+(D.mem[m].inactive?' checked':'')+' aria-label="Už sa nezúčastňuje" title="Už sa nezúčastňuje"></label>':'')+'</div>';h+='<div class="sw" data-dg="mem" data-did="'+m+'">'+(adm?'<button class="swa" data-a="swdel" data-t="mem" data-id="'+m+'">Zmazať</button>':'')+'<div class="swr">'+inn+'</div></div>'});
  return h+'<div class="add" style="margin-top:10px"><input id="mn2" data-enter placeholder="Pridať účastníka bez apky" maxlength="30"><button class="pri" data-a="addmem">Pridať</button></div></div>';
 }
 function exportPubs(){
@@ -857,20 +861,22 @@ function exportPubs(){
 }
 function pubsView(){
  var adm=isAdmin(),ids=pubsAlpha(Object.keys(D.pubs)),h='<div class="card"><div class="ct">Pridať krčmu</div><div class="pr"><input id="pn" placeholder="Názov krčmy" maxlength="40"><input id="pa" placeholder="Oblasť" maxlength="30"></div><div class="row"><button class="pri" data-a="addpub">Pridať krčmu</button></div></div>';
- h+='<div class="card"><div class="ct">Zoznam krčiem<span>'+ids.length+'</span></div>'+(adm?'<div class="log">Potiahni krčmu doľava = zmazať.</div>':'');
+ h+='<div class="card"><div class="ct">Zoznam krčiem<span>'+ids.length+'</span></div><div class="log">Ťukni na krčmu a uprav ju.'+(adm?' Potiahni krčmu doľava = zmazať.':'')+'</div>';
  ids.forEach(function(id){var P=D.pubs[id],bs=byT(P.beers||{}),o=openP===id;
-  h+='<div class="sw pk">'+(adm?'<button class="swa" data-a="swdel" data-t="pub" data-id="'+id+'">Zmazať</button>':'')+'<div class="swr"><div class="li pk"><button class="lnk" data-a="pubtog" data-id="'+id+'" aria-expanded="'+o+'"><b'+(P.closed?' class="dim"':'')+'>'+esc(P.name)+'</b><small class="ar">'+esc(P.area||"bez oblasti")+' · piv: '+bs.length+(P.closed?' · už neexistuje':'')+'</small></button></div></div></div>';
+  h+='<div class="sw">'+(adm?'<button class="swa" data-a="swdel" data-t="pub" data-id="'+id+'">Zmazať</button>':'')+'<div class="swr"><div class="cbox"><div class="crow"><button class="cnb" data-a="pubtog" data-id="'+id+'" aria-expanded="'+o+'"><b'+(P.closed?' class="dim"':'')+'>'+esc(P.name)+'</b><span class="chv">'+(o?'⌃':'⌄')+'</span></button></div>';
   if(o){h+='<div class="oth">'+(adm?'<label class="chk"><input type="checkbox" data-f="pclosed" data-id="'+id+'"'+(P.closed?' checked':'')+'> Už neexistuje</label>':'')+'<div class="pr"><input data-f="pname" data-id="'+id+'" value="'+esc(P.name)+'" aria-label="Názov krčmy"><input data-f="parea" data-id="'+id+'" value="'+esc(P.area||"")+'" placeholder="Oblasť" aria-label="Oblasť"></div>';var pos=P.lat!=null?(P.geo==="set"?"nastavená":P.geo==="osm"?"nájdená automaticky, skontroluj":"približná, podľa oblasti"):"chýba";
    h+='<div class="log">Poloha: <b>'+pos+'</b></div>'+(adm?'<div class="row" style="margin:0 0 8px"><button class="sm" data-a="geoone" data-id="'+id+'">Nájsť v OpenStreetMap</button><button class="sm" data-a="pickpos" data-id="'+id+'">'+(pickPub===id?"Zavrieť mapu":"Nastaviť na mape")+'</button></div>':'');
    if(adm&&pickPub===id)h+='<div id="pmap" class="mapbox pm"></div><div class="log">Ťukni na mapu tam, kde krčma stojí. Marker môžeš aj potiahnuť.</div><div class="row" style="margin:0 0 8px"><button class="pri" data-a="savepos" data-id="'+id+'">Uložiť polohu</button><button data-a="cancelpos">Zrušiť</button></div>';
    h+='<div class="log">Zaškrtnuté pivo sa ešte čapuje. Podrž a potiahni = poradie.'+(adm?' Potiahni doľava = zmazať.':'')+'</div>';
-   bs.forEach(function(b){var off=P.beers[b].off,inn='<div class="li"><input data-f="bname" data-id="'+id+'" data-b="'+b+'" value="'+esc(P.beers[b].name)+'" aria-label="Názov piva"'+(off?' class="dim"':'')+'><label class="chk tapc"><input type="checkbox" data-f="btap" data-id="'+id+'" data-b="'+b+'"'+(off?'':' checked')+' aria-label="Čapuje sa"></label></div>';h+='<div class="sw" data-dg="beer:'+id+'" data-did="'+b+'">'+(adm?'<button class="swa" data-a="swdel" data-t="beer" data-p="'+id+'" data-id="'+b+'">Zmazať</button>':'')+'<div class="swr">'+inn+'</div></div>'});
-   h+='<div class="add" style="margin-top:8px"><input id="bn" data-enter placeholder="Pridať čapované pivo" maxlength="40"><button class="pri" data-a="addbeer" data-id="'+id+'">Pridať</button></div>'+'</div>'}});
+   bs.forEach(function(b){var off=P.beers[b].off,inn='<div class="li"><input data-f="bname" data-id="'+id+'" data-b="'+b+'" value="'+esc(P.beers[b].name)+'" aria-label="Názov piva" class="fitw'+(off?' dim':'')+'" style="'+fw(P.beers[b].name)+'"><label class="chk tapc"><input type="checkbox" data-f="btap" data-id="'+id+'" data-b="'+b+'"'+(off?'':' checked')+' aria-label="Čapuje sa"></label></div>';h+='<div class="sw" data-dg="beer:'+id+'" data-did="'+b+'">'+(adm?'<button class="swa" data-a="swdel" data-t="beer" data-p="'+id+'" data-id="'+b+'">Zmazať</button>':'')+'<div class="swr">'+inn+'</div></div>'});
+   h+='<div class="add" style="margin-top:8px"><input id="bn" data-enter placeholder="Pridať čapované pivo" maxlength="40"><button class="pri" data-a="addbeer" data-id="'+id+'">Pridať</button></div>'+'</div>'}
+  h+='</div></div></div>';});
  h+='<div class="row" style="margin-top:12px"><button data-a="exportp">Export krčiem do Excelu</button></div>'+(xMsg?'<div class="log danger">'+esc(xMsg)+'</div>':'');
  if(adm)h+='<div class="row" style="margin-top:12px"><button data-a="geoall">Nájsť polohy automaticky</button></div>'+(geoMsg?'<div class="log">'+esc(geoMsg)+'</div>':'');
  return h+'</div>';
 }
 var SVGA='viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"',LKC='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',LKO='<svg '+SVGA+'><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-1.9"/></svg>',XI='<svg '+SVGA+'><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function fw(v){return 'width:'+Math.max(4,String(v).length+2)+'ch'}
 function priceView(){
  var h='<div class="card"><div class="ct">Alkohol a ceny</div><div class="log">Zaškrtnuté = zobrazuje sa v účte. Podrž položku a potiahni = poradie.'+(isAdmin()?' Potiahni riadok doľava = zmazať.':'')+'</div>';
  Object.keys(D.items).sort(function(a,b){return (D.items[a].t||0)-(D.items[b].t||0)}).forEach(function(i){var it=D.items[i];
@@ -1788,7 +1794,7 @@ function syncUrl(){try{var q2="?r="+room+(db!==DB_URL?"&db="+encodeURIComponent(
 var DR=null,drSup=false,SW=null,swOpen=null,swSup=false,SWW=88;
 function swClose(){if(swOpen){var w=swOpen,r=w.querySelector(".swr");if(r){r.style.transition="";r.style.transform=""}w.classList.remove("open");setTimeout(function(){if(!w.classList.contains("open"))w.classList.remove("swing")},240);swOpen=null}}
 function drCancel(){if(DR){clearTimeout(DR.t);if(DR.on){DR.cards.forEach(function(c){c.style.transform="";c.classList.remove("dshift")});DR.el.classList.remove("dragging");setTimeout(function(){drSup=false},350)}}DR=null}
-function drDown(t,x,y){if(DR||!t||!t.closest)return;if(t.closest("select,textarea,input[type=checkbox],.swa"))return;var el=t.closest("[data-dg]");if(!el)return;DR={el:el,g:el.dataset.dg,x0:x,y0:y,on:false,t:setTimeout(drOn,450)}}
+function drDown(t,x,y){if(DR||!t||!t.closest)return;if(t.closest("select,textarea,input,.swa"))return;var el=t.closest("[data-dg]");if(!el)return;DR={el:el,g:el.dataset.dg,x0:x,y0:y,on:false,t:setTimeout(drOn,450)}}
 function drOn(){if(!DR)return;var g=DR.g,els=Array.prototype.filter.call(app.querySelectorAll("[data-dg]"),function(c){return c.dataset.dg===g});DR.cards=els;DR.rects=els.map(function(c){var r=c.getBoundingClientRect();return{top:r.top,h:r.height}});DR.from=els.indexOf(DR.el);if(DR.from<0||els.length<2){DR=null;return}DR.to=DR.from;DR.on=true;swClose();try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(e){}DR.el.classList.add("dragging");els.forEach(function(c){if(c!==DR.el)c.classList.add("dshift")});drSup=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}}
 function drMove(x,y){if(!DR)return;var dy=y-DR.y0;if(!DR.on){if(Math.abs(dy)>10||Math.abs(x-DR.x0)>10)drCancel();return}
  DR.el.style.transform="translateY("+dy+"px)";var r=DR.rects[DR.from],c=r.top+r.h/2+dy,to=DR.from;
@@ -1809,6 +1815,7 @@ document.addEventListener("touchend",function(){drUp();swUp()});document.addEven
 document.addEventListener("mousedown",function(e){if(e.button===0){swDown(e.target,e.clientX,e.clientY);drDown(e.target,e.clientX,e.clientY)}});
 document.addEventListener("mousemove",function(e){if(DR)drMove(e.clientX,e.clientY);if(SW)swMove(e.clientX,e.clientY,e)});
 document.addEventListener("mouseup",function(){drUp();swUp()});
+document.addEventListener("input",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("fitw"))t.style.width=Math.max(4,t.value.length+2)+"ch"});
 var lastTap={id:"",t:0};
 document.addEventListener("click",function(e){
  if(drSup||swSup){e.stopPropagation();e.preventDefault();return}
