@@ -363,10 +363,9 @@ function mapView(){
  var all=edsSorted(),cur=(mapsc==="all"||D.ed[mapsc])?mapsc:(all[0]||"all");
  var h='<div class="chips"><button data-a="mc" data-id="all" class="'+(cur==="all"?"on":"")+'">Všetky</button>'+all.map(function(id){return '<button data-a="mc" data-id="'+id+'" class="'+(id===cur?"on":"")+'">'+esc(D.ed[id].year)+'</button>'}).join("")+'</div>';
  mapItemsCur=mapItems(cur);mapRouteCur=(cur!=="all"&&mapRoute);
- if(cur!=="all")h+='<div class="row" style="margin:0 0 8px"><button class="sm" data-a="mroute">Trasa čiarou: '+(mapRoute?"zapnutá":"vypnutá")+'</button></div>';
- var nop=mapItemsCur.filter(function(it){return it.lat==null});
+  var nop=mapItemsCur.filter(function(it){return it.lat==null});
  mapTitle=cur==="all"?"Všetky krčmy":((D.ed[cur].no?D.ed[cur].no+". ročník · ":"")+D.ed[cur].year);
- h+='<div id="map" class="mapbox"></div><div class="row" style="margin:0 0 6px"><button data-a="mapjpg">Export mapy do JPG</button></div><div class="log" id="mapmsg">'+(cur==="all"?"Hviezdička = krčma, ktorá existuje. Bez poradia a bez trasy.":"Číslo v bode = poradie krčmy v ročníku.")+' Prerušovaný bod je približná poloha.</div>';
+ h+='<div id="map" class="mapbox"></div>'+(cur!=="all"?'<div class="row" style="margin:0 0 8px"><button class="sm" data-a="mroute">Trasa čiarou: '+(mapRoute?"zapnutá":"vypnutá")+'</button></div>':'')+'<div class="row" style="margin:0 0 6px"><button data-a="mapjpg">Export mapy do JPG</button></div><div class="log" id="mapmsg">'+(cur==="all"?"Hviezdička = krčma, ktorá existuje. Bez poradia a bez trasy.":"Číslo v bode = poradie krčmy v ročníku.")+' Prerušovaný bod je približná poloha.</div>';
  if(nop.length)h+='<div class="card"><div class="ct">Bez polohy<span>'+nop.length+'</span></div><div class="log" style="margin:0">'+nop.map(function(it){return esc(it.name)}).join(", ")+'. Polohu nastavíš v Nastaveniach, v časti Krčmy.</div></div>';
  return h;
 }
@@ -703,7 +702,7 @@ function allView(){
  return '<div class="log">Všetky ročníky dokopy. Známky ako v škole: 1 je najlepšia, 5 najhoršia. Ø krčmy je priemer z piva, krčmy a obsluhy. Rovnaké piva z rôznych krčiem sú zlúčené a spriemerované.</div>'+'<div class="pgr"><button data-a="pgprev" aria-label="Predošlá tabuľka">‹</button><span id="pgind">'+(pagerIdx+1)+' / 2 · '+pagerNames[pagerIdx]+'</span><button data-a="pgnext" aria-label="Ďalšia tabuľka">›</button></div><div id="pager" class="pager">'+tb("Krčmy",pl,"Krčma")+tb("Piva",bl,"Pivo")+'</div>'}
 function voteCard(E,e){
  var adm=isAdmin();
- if(!E.vo)return (adm&&!E.lock)?'<div class="row"><button data-a="votetog" data-e="'+e+'">Otvoriť hlasovanie o krčmách</button></div>':"";
+ if(!E.vo)return "";
  var V={},voters=0;
  Object.keys(E.vote||{}).forEach(function(m){if(!D.mem[m])return;var ps=Object.keys(E.vote[m]||{});if(ps.length)voters++;ps.forEach(function(p){V[p]=(V[p]||0)+1})});
  var my=(E.vote||{})[who()]||{},ids=Object.keys(D.pubs).filter(function(id){return !D.pubs[id].closed}).sort(function(a,b){return (V[b]||0)-(V[a]||0)||D.pubs[a].name.localeCompare(D.pubs[b].name,"sk")});
