@@ -656,7 +656,7 @@ function pubRate(e,pid){
  var P=D.pubs[pid]||{name:"(zmazaná krčma)"},sp=D.ed[e].pubs[pid],R=(D.rt[e]||{})[pid]||{},w=who(),lk=!!D.ed[e].lock;
  var beers=byT(P.beers||{}).filter(function(b){return !P.beers[b].off}).map(function(b){return P.beers[b].name}),cur=sp.beer||"";
  if(cur&&beers.indexOf(cur)<0)beers.push(cur);
- var h='<div class="p"><div class="gh"><span class="nm'+(P.closed?' dim':'')+'">'+esc(P.name)+(P.area?'<small class="ar">'+esc(P.area)+'</small>':'')+'</span>'+(lk?'':'<button class="danger sm" data-a="unpick" data-e="'+e+'" data-id="'+pid+'">'+(armed==="up"+pid?"Naozaj?":"Odobrať")+'</button>')+'</div>';
+ var h='<div class="p"><div class="gh"><span class="nm'+(P.closed?' dim':'')+'">'+esc(P.name)+(P.area?'<small class="ar">'+esc(P.area)+'</small>':'')+'</span>'+(lk||edPast(D.ed[e])?'':'<button class="danger sm" data-a="unpick" data-e="'+e+'" data-id="'+pid+'">'+(armed==="up"+pid?"Naozaj?":"Odobrať")+'</button>')+'</div>';
  h+='<div class="rt"><span class="rl">Hodnotené pivo</span><select data-sel="beer" data-e="'+e+'" data-id="'+pid+'"'+(lk?' disabled':'')+(beerOff(pid,cur)?' class="dim"':'')+'><option value="">vyber pivo</option>'+beers.map(function(n){return '<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join("")+'</select></div>';
  KIND.forEach(function(k){h+=starRow(e,pid,k[0],k[1])});
  var oth=Object.keys(D.mem).filter(function(m){return m!==w&&KIND.some(function(k){return (R[k[0]]||{})[m]})});
@@ -786,6 +786,7 @@ function exportCans(){
  sheets.forEach(function(x,i){var sd=x.r.map(function(r,ri){return '<row r="'+(ri+1)+'">'+r.map(function(v,ci){var ref=colL(ci+1)+(ri+1),st=ri===0?1:0;if(typeof v==="number")return '<c r="'+ref+'" s="'+st+'"><v>'+v+'</v></c>';return v===""||v==null?'<c r="'+ref+'" s="'+st+'"/>':'<c r="'+ref+'" s="'+st+'" t="inlineStr"><is><t xml:space="preserve">'+xe(v)+'</t></is></c>'}).join("")+'</row>'}).join("");
   files.push(["xl/worksheets/sheet"+(i+1)+".xml",te.encode(H+'<worksheet '+NS+'><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+x.w.map(function(w,ci){return '<col min="'+(ci+1)+'" max="'+(ci+1)+'" width="'+w+'" customWidth="1"/>'}).join("")+'</cols><sheetData>'+sd+'</sheetData></worksheet>')])});
  var blob=zipWrite(files),an=document.createElement("a");an.href=URL.createObjectURL(blob);an.download="TourDeBeer_plechovky.xlsx";document.body.appendChild(an);an.click();setTimeout(function(){an.remove();URL.revokeObjectURL(an.href)},3000)}
+function edPast(E){var m=/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec((E&&E.date)||"");if(!m)return false;var d=new Date(+m[3],+m[2]-1,+m[1]),t=new Date();t.setHours(0,0,0,0);return d<t}
 function tdbView(){
  var h='<div class="head hl"><div><div class="kick">Krčmová túra</div><h1>TourDeBeer</h1><div class="chip" id="st"></div><div class="tag">Walk · Drink · Enjoy</div></div><img class="mascot" src="'+MASCOT+'" alt=""></div>'+seg("tsub",[["rate","Hodnotenie"],["stat","Štatistika"],["map","Mapa"],["cans","Plechovky"]],tsub);
  if(tsub==="cans")return h+cansTab();
@@ -799,7 +800,7 @@ function tdbView(){
  h+='<div class="log"><b>'+(E.no?E.no+". ročník":"Ročník")+'</b> · '+esc(E.year)+(E.date?' · '+esc(E.date):'')+(E.lock?' · 🔒 uzavretý':'')+'</div>';
  if(!D.mem[DEV])h+=nameCard();
  h+=voteCard(E,e);
- if(!E.lock){
+ if(!E.lock&&!edPast(E)){
  var free=pubsSorted(Object.keys(D.pubs).filter(function(id){return !(E.pubs||{})[id]&&!D.pubs[id].closed}));
  h+='<div class="card"><div class="ct">Vybrané krčmy<span>'+picked.length+'/'+n+'</span></div><div class="add"><select id="psel"><option value="">vyber krčmu zo zoznamu</option>'+free.map(function(id){var P=D.pubs[id];return '<option value="'+id+'">'+esc(P.name)+(P.area?' ('+esc(P.area)+')':'')+'</option>'}).join("")+'</select><button class="pri" data-a="pick" data-e="'+e+'"'+(picked.length>=n?' disabled':'')+'>Pridať</button></div>';
  h+='<div class="pr"><span class="rl">Počet krčiem v ročníku</span><input class="c" style="max-width:90px" inputmode="numeric" data-f="en" data-e="'+e+'" value="'+n+'"></div></div>';
